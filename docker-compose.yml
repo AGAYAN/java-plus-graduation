@@ -58,8 +58,8 @@ services:
       - ewm-net
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/ewm-stats
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     healthcheck:
       test: "curl --fail --silent localhost:9090/actuator/health | grep UP || exit 1"
@@ -71,8 +71,8 @@ services:
     image: postgres:16.1
     container_name: postgres-ewm-stats-db
     environment:
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=root
       - POSTGRES_DB=ewm-stats
     networks:
       - ewm-net
@@ -96,8 +96,8 @@ services:
       - ewm-net
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-main
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
       - SERVER_PORT=8081
     healthcheck:
@@ -112,8 +112,8 @@ services:
     networks:
       - ewm-net
     environment:
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=root
       - POSTGRES_DB=ewm-main
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
