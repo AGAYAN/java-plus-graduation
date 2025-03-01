@@ -1,3 +1,6 @@
+server:
+  port: 9090
+
 spring:
   application:
     name: stats-server
@@ -18,7 +21,3 @@ eureka:
     hostname: localhost
     instanceId: "${spring.application.name}:${server.port}"
     leaseRenewalIntervalInSeconds: 10
-
-logging:
-  level:
-    org.springframework.cloud.config: DEBUG

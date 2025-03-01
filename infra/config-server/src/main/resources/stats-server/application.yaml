@@ -5,8 +5,8 @@ spring:
   datasource:
     driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://stats-db:5432/ewm-stats
-    username: root
-    password: root
+    username: postgres
+    password: admin
   sql:
     init:
       mode: always
