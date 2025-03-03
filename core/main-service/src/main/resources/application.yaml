@@ -1,12 +1,7 @@
-server:
-  port: 0
-
-stat-server:
-  uri: http://stats-server:9090
 
 spring:
   application:
-    name: main-service
+    name: ewm-main-service
   config:
     import: "configserver:"
   cloud:
