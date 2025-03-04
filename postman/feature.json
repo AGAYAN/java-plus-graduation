@@ -1,0 +1,2345 @@
+{
+  "info": {
+    "_postman_id": "34aafd5f-9819-4016-a760-9e249d582ce8",
+    "name": "Explore With Me - Feature",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "27052193"
+  },
+  "item": [
+    {
+      "name": "Создание подписки",
+      "item": [
+        {
+          "name": "Подписка без указания пользователя, на которого надо подписаться",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            // выполняем наш скрипт\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.badRequest;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание:\n- нельзя добавить повторный запрос\n- инициатор события не может добавить запрос на участие в своём событии\n- нельзя участвовать в неопубликованном событии\n- если у события достигнут лимит запросов на участие - необходимо вернуть ошибку\n- если для события отключена пре-модерация запросов на участие, то запрос должен автоматически перейти в состояние подтвержденного"
+          },
+          "response": []
+        },
+        {
+          "name": "Подписка на несуществующего пользователя",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        pm.request.removeQueryParams(['initiatorId']);\r",
+                  "        pm.request.addQueryParams([`initiatorId=` + (user.id + 9999)]);\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.notFound;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?initiatorId=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "initiatorId",
+                  "value": "0",
+                  "description": "(Required) id пользователя-публикатора"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Подписка, когда не существует сам подписчик",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id + 9999);\r",
+                  "        pm.request.removeQueryParams(['initiatorId']);\r",
+                  "        pm.request.addQueryParams([`initiatorId=` + user.id]);\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.notFound;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?initiatorId=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "initiatorId",
+                  "value": "0",
+                  "description": "(Required) id пользователя-публикатора"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Подписка, когда пользователь уже подписан на указанного пользователя-инициатора",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "        pm.request.removeQueryParams(['initiatorId']);\r",
+                  "        pm.request.addQueryParams([`initiatorId=` + user.id]);\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 409 и данные в формате json\", function () {\r",
+                  "    pm.response.to.have.status(409);    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?initiatorId=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "initiatorId",
+                  "value": "0",
+                  "description": "(Required) id пользователя-публикатора"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Корректное создание подписки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        pm.request.removeQueryParams(['initiatorId']);\r",
+                  "        pm.request.addQueryParams([`initiatorId=` + user.id]);\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200\", function () {\r",
+                  "    pm.response.to.be.ok;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?initiatorId=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "initiatorId",
+                  "value": "0",
+                  "description": "(Required) id пользователя-публикатора"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Просмотр событий в подписке",
+      "item": [
+        {
+          "name": "Получение событий с недопустимой сортировкой",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.badRequest;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?sort=HITS",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "HITS"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий с недопустимой значением from",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.badRequest;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?from=-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "-1"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий с недопустимой значением size",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.badRequest;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?size=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "0"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий с недопустимой временным интервалом",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.badRequest;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?rangeStart=2030-12-31 12:00:00&rangeEnd=2020-01-01 13:05:55",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "rangeStart",
+                  "value": "2030-12-31 12:00:00"
+                },
+                {
+                  "key": "rangeEnd",
+                  "value": "2020-01-01 13:05:55"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий, если подписчик не существует",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id + 9999);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.notFound;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий из подписки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user1 = await api.addUser(rnd.getUser());\r",
+                  "        const category1 = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category1.id);\r",
+                  "        let event = await api.addEvent(user1.id, eventBody);\r",
+                  "        const event1 = await api.publishEvent(event.id);\r",
+                  "        const user2 = await api.addUser(rnd.getUser());\r",
+                  "        const category2 = await api.addCategory(rnd.getCategory());\r",
+                  "        eventBody = rnd.getEvent(category2.id);\r",
+                  "        event = await api.addEvent(user2.id, eventBody);\r",
+                  "        const event2 = await api.publishEvent(event.id);\r",
+                  "        pm.collectionVariables.set('response', event2);\r",
+                  "        const user3 = await api.addUser(rnd.getUser());\r",
+                  "        const category3 = await api.addCategory(rnd.getCategory());\r",
+                  "        eventBody = rnd.getEvent(category3.id);\r",
+                  "        event = await api.addEvent(user3.id, eventBody);\r",
+                  "        const event3 = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user2.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.ok;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const source = pm.collectionVariables.get('response');\r",
+                  "const target = pm.response.json()[0];\r",
+                  "\r",
+                  "pm.test(\"Событие должно содержать поля: id, initiator, title, category, eventDate, annotation, paid, confirmedRequests, views\", function () {\r",
+                  "pm.expect(target).to.have.property('id');\r",
+                  "pm.expect(target).to.have.property('initiator');\r",
+                  "pm.expect(target).to.have.property('title');\r",
+                  "pm.expect(target).to.have.property('category');\r",
+                  "pm.expect(target).to.have.property('eventDate');\r",
+                  "pm.expect(target).to.have.property('annotation');\r",
+                  "pm.expect(target).to.have.property('paid');\r",
+                  "pm.expect(target).to.have.property('confirmedRequests');\r",
+                  "pm.expect(target).to.have.property('views');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+                  "    pm.expect(source.id).equal(target.id, 'Идентификатор события должен соответствовать указанному идентификатору');\r",
+                  "    pm.expect(source.initiator.id).equal(target.initiator.id, 'Инициатор события должен соответствовать инициатору события с указанным идентификатором');\r",
+                  "    pm.expect(source.title).equal(target.title, 'Название события должно соответствовать названию события с указанным идентификатором');\r",
+                  "    pm.expect(source.category.id).equal(target.category.id, 'Категория события должна соответствовать категории события с указанным идентификатором');\r",
+                  "    pm.expect(source.eventDate).equal(target.eventDate, 'Дата проведения события должна соответствовать дате проведения события с указанным идентификатором');\r",
+                  "    pm.expect(source.annotation).equal(target.annotation, 'Аннотация события должна соответствовать аннотации события с указанным идентификатором');\r",
+                  "    pm.expect(source.paid.toString()).equal(target.paid.toString(), 'Стоимость события должна соответствовать стоимости события с указанным идентификатором');\r",
+                  "    pm.expect(source.confirmedRequests).equal(target.confirmedRequests, 'Количество подтверждённых заявок должно соответствовать количеству подтверждённых заявок для события с указанным идентификатором');\r",
+                  "    pm.expect(source.views).equal(target.views, 'Количество просмотров должно соответствовать количеству просмотров для события с указанным идентификатором');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий из подписки, когда нет событий",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user1 = await api.addUser(rnd.getUser());\r",
+                  "        const category1 = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category1.id);\r",
+                  "        let event = await api.addEvent(user1.id, eventBody);\r",
+                  "        const event1 = await api.publishEvent(event.id);\r",
+                  "        const user2 = await api.addUser(rnd.getUser());\r",
+                  "        const user3 = await api.addUser(rnd.getUser());\r",
+                  "        const category3 = await api.addCategory(rnd.getCategory());\r",
+                  "        eventBody = rnd.getEvent(category3.id);\r",
+                  "        event = await api.addEvent(user3.id, eventBody);\r",
+                  "        const event3 = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user2.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.ok;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const target = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Размер списка должен быть равным 0\", function () {\r",
+                  "    pm.expect(target.length).to.equal(0);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий из подписки, когда нет подписки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user1 = await api.addUser(rnd.getUser());\r",
+                  "        const category1 = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category1.id);\r",
+                  "        let event = await api.addEvent(user1.id, eventBody);\r",
+                  "        const event1 = await api.publishEvent(event.id);\r",
+                  "        const user2 = await api.addUser(rnd.getUser());\r",
+                  "        const user3 = await api.addUser(rnd.getUser());\r",
+                  "        const category3 = await api.addCategory(rnd.getCategory());\r",
+                  "        eventBody = rnd.getEvent(category3.id);\r",
+                  "        event = await api.addEvent(user3.id, eventBody);\r",
+                  "        const event3 = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.ok;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const target = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Размер списка должен быть равным 0\", function () {\r",
+                  "    pm.expect(target.length).to.equal(0);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий из подписки с возможностью фильтрации",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        pm.request.removeQueryParams(['text', 'categories', 'paid']);\r",
+                  "        pm.request.addQueryParams([`text=` + event.annotation, 'categories=' + category.id, 'paid=' + event.paid]);\r",
+                  "        pm.collectionVariables.set('response', event);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.ok;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const source = pm.collectionVariables.get('response');\r",
+                  "const target = pm.response.json()[0];\r",
+                  "\r",
+                  "pm.test(\"Событие должно содержать поля: id, initiator, title, category, eventDate, annotation, paid, confirmedRequests, views\", function () {\r",
+                  "pm.expect(target).to.have.property('id');\r",
+                  "pm.expect(target).to.have.property('initiator');\r",
+                  "pm.expect(target).to.have.property('title');\r",
+                  "pm.expect(target).to.have.property('category');\r",
+                  "pm.expect(target).to.have.property('eventDate');\r",
+                  "pm.expect(target).to.have.property('annotation');\r",
+                  "pm.expect(target).to.have.property('paid');\r",
+                  "pm.expect(target).to.have.property('confirmedRequests');\r",
+                  "pm.expect(target).to.have.property('views');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+                  "    pm.expect(source.id).equal(target.id, 'Идентификатор события должен соответствовать указанному идентификатору');\r",
+                  "    pm.expect(source.initiator.id).equal(target.initiator.id, 'Инициатор события должен соответствовать инициатору события с указанным идентификатором');\r",
+                  "    pm.expect(source.title).equal(target.title, 'Название события должно соответствовать названию события с указанным идентификатором');\r",
+                  "    pm.expect(source.category.id).equal(target.category.id, 'Категория события должна соответствовать категории события с указанным идентификатором');\r",
+                  "    pm.expect(source.eventDate).equal(target.eventDate, 'Дата проведения события должна соответствовать дате проведения события с указанным идентификатором');\r",
+                  "    pm.expect(source.annotation).equal(target.annotation, 'Аннотация события должна соответствовать аннотации события с указанным идентификатором');\r",
+                  "    pm.expect(source.paid.toString()).equal(target.paid.toString(), 'Стоимость события должна соответствовать стоимости события с указанным идентификатором');\r",
+                  "    pm.expect(source.confirmedRequests).equal(target.confirmedRequests, 'Количество подтверждённых заявок должно соответствовать количеству подтверждённых заявок для события с указанным идентификатором');\r",
+                  "    pm.expect(source.views).equal(target.views, 'Количество просмотров должно соответствовать количеству просмотров для события с указанным идентификатором');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions?text=0&categories=0&paid=true&rangeStart=2020-01-01 13:05:55&rangeEnd=2030-12-31 12:00:00&onlyAvailable=true&sort=EVENT_DATE&from=0&size=1000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "0",
+                  "description": "текст для поиска в содержимом аннотации и подробном описании события"
+                },
+                {
+                  "key": "categories",
+                  "value": "0",
+                  "description": "список идентификаторов категорий, в которых будет вестись поиск"
+                },
+                {
+                  "key": "paid",
+                  "value": "true",
+                  "description": "поиск только платных/ бесплатных событий"
+                },
+                {
+                  "key": "rangeStart",
+                  "value": "2020-01-01 13:05:55",
+                  "description": "дата и время, не раньше которых должно произойти событие"
+                },
+                {
+                  "key": "rangeEnd",
+                  "value": "2030-12-31 12:00:00",
+                  "description": "дата и время, не позже которых должно произойти событие"
+                },
+                {
+                  "key": "onlyAvailable",
+                  "value": "true",
+                  "description": "только события, у которых не исчерпан лимит запросов на участие (по умолчанию равен false)"
+                },
+                {
+                  "key": "sort",
+                  "value": "EVENT_DATE",
+                  "description": "может принимать значения EVENT_DATE и VIEWS (по умолчанию сортировка по дате публикации)"
+                },
+                {
+                  "key": "from",
+                  "value": "0",
+                  "description": "количество событий, которые надо пропустить (по умолчанию равен 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "1000",
+                  "description": "количество отображаемых событий (по умолчанию равен 10)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Получение событий из подписки с проверкой на значения по-умолчанию size и from",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    let eventArr, user, category, eventResponseArr = [];\r",
+                  "    let event = null;\r",
+                  "    try {\r",
+                  "        user = await api.addUser(rnd.getUser());\r",
+                  "        category = await api.addCategory(rnd.getCategory());\r",
+                  "        eventArr = Array.from({length:11}, () => rnd.getEvent(category.id));\r",
+                  "        for (let i = 0; i < 11; i++){\r",
+                  "            event = await api.addEvent(user.id, eventArr[i])\r",
+                  "            eventResponseArr.push(await api.publishEvent(event.id));\r",
+                  "        }\r",
+                  "        pm.collectionVariables.set('responseArr', eventResponseArr)\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.ok;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  "const target = pm.response.json();\r",
+                  "const source = pm.collectionVariables.get('responseArr');\r",
+                  "newSourceArr = Array.from(source, (x) => x.id);\r",
+                  "// const responseWithFrom = pm.collectionVariables.get('source');\r",
+                  "const responseWithFrom = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Значение size по-умолчанию должно быть равным 10\", function () {\r",
+                  "    pm.expect(target.length).to.equal(10);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Значение from по-умолчанию должно быть равным 0\", function () {\r",
+                  "    pm.expect(target[0].id).to.be.equal(responseWithFrom[0].id, 'Запросы с from=0 и без него должны начинаться с одного и того же события');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Все найденные события должны быть в списке добавленных\", function () {\r",
+                  "    source.forEach(function(x){pm.expect(newSourceArr).to.include(x.id)});\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "0",
+                  "description": "количество элементов, которые нужно пропустить для формирования текущего набора",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "1000",
+                  "description": "количество элементов в наборе",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Отмена подписки",
+      "item": [
+        {
+          "name": "Отмена подписки на несуществующего пользователя",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        pm.collectionVariables.set('initiatorId', user.id + 9999);\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.notFound;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:initiatorId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":initiatorId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                },
+                {
+                  "key": "initiatorId",
+                  "value": "{{initiatorId}}",
+                  "description": "(Required) id пользователя-публикатора"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Отмена подписки, когда сам пользователь не существует",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id + 9999);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        pm.collectionVariables.set('initiatorId', user.id);\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.notFound;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:initiatorId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":initiatorId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                },
+                {
+                  "key": "initiatorId",
+                  "value": "{{initiatorId}}",
+                  "description": "(Required) id пользователя-публикатора"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Отмена подписки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        api.subscribeToUser(submittedUser.id, user.id)\r",
+                  "        pm.collectionVariables.set('initiatorId', user.id);\r",
+                  "        setTimeout(function(){}, 500)\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 204\", function () {\r",
+                  "    pm.response.to.have.status(204);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:initiatorId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":initiatorId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                },
+                {
+                  "key": "initiatorId",
+                  "value": "{{initiatorId}}",
+                  "description": "(Required) id пользователя-публикатора"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        },
+        {
+          "name": "Отмена подписки, когда подписка не существует",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const main = async () => {\r",
+                  "    const api = new API(pm);\r",
+                  "    const rnd = new RandomUtils();\r",
+                  "\r",
+                  "    try {\r",
+                  "        const user = await api.addUser(rnd.getUser());\r",
+                  "        const category = await api.addCategory(rnd.getCategory());\r",
+                  "        let eventBody = rnd.getEvent(category.id);\r",
+                  "        let event = await api.addEvent(user.id, eventBody);\r",
+                  "        event = await api.publishEvent(event.id);\r",
+                  "        const submittedUser = await api.addUser(rnd.getUser());\r",
+                  "        pm.collectionVariables.set('uid', submittedUser.id);\r",
+                  "        pm.collectionVariables.set('initiatorId', user.id);\r",
+                  "    } catch(err) {\r",
+                  "        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+                  "    }\r",
+                  "};\r",
+                  "\r",
+                  "const interval = setInterval(() => {}, 1000);\r",
+                  "\r",
+                  "setTimeout(async () => \r",
+                  "    {\r",
+                  "        try {\r",
+                  "            await main();\r",
+                  "        } catch (e) {\r",
+                  "            console.error(e);\r",
+                  "        } finally {\r",
+                  "            clearInterval(interval);\r",
+                  "        }\r",
+                  "    },  \r",
+                  "    100 \r",
+                  ");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ответ должен содержать код статуса 404 и данные в формате json\", function () {\r",
+                  "    pm.response.to.be.notFound;    \r",
+                  "    pm.response.to.be.withBody;\r",
+                  "    pm.response.to.be.json;\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/:userId/subscriptions/:initiatorId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":userId",
+                "subscriptions",
+                ":initiatorId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{uid}}",
+                  "description": "(Required) id текущего пользователя"
+                },
+                {
+                  "key": "initiatorId",
+                  "value": "{{initiatorId}}",
+                  "description": "(Required) id пользователя-публикатора"
+                }
+              ]
+            },
+            "description": "Обратите внимание: дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          "API = class {",
+          "    constructor(postman, verbose = false, baseUrl = \"http://localhost:8080\") {",
+          "        this.baseUrl = baseUrl;",
+          "        this.pm = postman;",
+          "        this._verbose = verbose;",
+          "    }",
+          "",
+          "    async addUser(user, verbose=null) {",
+          "        return this.post(\"/admin/users\", user, \"Ошибка при добавлении нового пользователя: \", verbose);",
+          "    }",
+          "",
+          "    async addCategory(category, verbose=null) {",
+          "        return this.post(\"/admin/categories\", category, \"Ошибка при добавлении новой категории: \", verbose);",
+          "    }",
+          "",
+          "    async addEvent(userId, event, verbose=null) {",
+          "        return this.post(\"/users/\" + userId + \"/events\", event, \"Ошибка при добавлении нового события: \", verbose);",
+          "    }",
+          "",
+          "    async addCompilation(compilation, verbose=null) {",
+          "        return this.post(\"/admin/compilations\", compilation, \"Ошибка при добавлении новой подборки: \", verbose);",
+          "    }",
+          "",
+          "    async publishParticipationRequest(eventId, userId, verbose=null) {",
+          "        return this.post('/users/' + userId + '/requests?eventId=' + eventId, null, \"Ошибка при добавлении нового запроса на участие в событии\", verbose);",
+          "    }",
+          "",
+          "    async publishEvent(eventId, verbose=null) {",
+          "        return this.patch('/admin/events/' + eventId, {stateAction: \"PUBLISH_EVENT\"}, \"Ошибка при публикации события\", verbose);",
+          "    }",
+          "    ",
+          "    async rejectEvent(eventId, verbose=null) {",
+          "        return this.patch('/admin/events/' + eventId, {stateAction: \"REJECT_EVENT\"}, \"Ошибка при отмене события\", verbose);",
+          "    }",
+          "",
+          "    async acceptParticipationRequest(eventId, userId, reqId, verbose=null) {",
+          "        return this.patch('/users/' + userId + '/events/' + eventId + '/requests', {requestIds:[reqId], status: \"CONFIRMED\"}, \"Ошибка при принятии заявки на участие в событии\", verbose);",
+          "    }",
+          "",
+          "    async findCategory(catId, verbose=null) {",
+          "        return this.get('/categories/' + catId, null, \"Ошибка при поиске категории по id\", verbose);",
+          "    }",
+          "",
+          "    async findCompilation(compId, verbose=null) {",
+          "        return this.get('/compilations/' + compId, null, \"Ошибка при поиске подборки по id\", verbose);",
+          "    }",
+          "",
+          "    async findEvent(eventId, verbose=null) {",
+          "        return this.get('/events/' + eventId, null, \"Ошибка при поиске события по id\", verbose);",
+          "    }",
+          "",
+          "    async findUser(userId, verbose=null) {",
+          "        return this.get('/admin/users?ids=' + userId, null, \"Ошибка при поиске пользователя по id\", verbose);",
+          "    }",
+          "",
+          "    async subscribeToUser(subscriberId, publisherId, verbose=null) {",
+          "        return this.postForNoBody('/users/' + subscriberId + '/subscriptions?initiatorId=' + publisherId, null, 'Ошибка при создании подписки', verbose)",
+          "    }",
+          "",
+          "    async post(path, body, errorText = \"Ошибка при выполнении post-запроса: \", verbose=null) {",
+          "        return this.sendRequest(\"POST\", path, body, errorText, verbose);",
+          "    }",
+          "",
+          "    async postForNoBody(path, body, errorText = \"Ошибка при выполнении post-запроса: \", verbose=null) {",
+          "        return this.sendRequestForNoBody(\"POST\", path, body, errorText, verbose);",
+          "    }",
+          "",
+          "    async patch(path, body = null, errorText = \"Ошибка при выполнении patch-запроса: \", verbose=null) {",
+          "        return this.sendRequest(\"PATCH\", path, body, errorText, verbose);",
+          "    }",
+          "",
+          "    async get(path, body = null, errorText = \"Ошибка при выполнении get-запроса: \", verbose=null) {",
+          "        return this.sendRequest(\"GET\", path, body, errorText, verbose);",
+          "    }",
+          "",
+          "    async sendRequest(method, path, body=null, errorText = \"Ошибка при выполнении запроса: \", verbose=null) {",
+          "        return new Promise((resolve, reject) => {",
+          "            verbose = verbose == null ? this._verbose : verbose;",
+          "            const request = {",
+          "                url: this.baseUrl + path,",
+          "                method: method,",
+          "                body: body == null ? \"\" : JSON.stringify(body),",
+          "                header: { \"Content-Type\": \"application/json\" },",
+          "            };",
+          "            if(verbose) {",
+          "                console.log(\"Отправляю запрос: \", request);",
+          "            }",
+          "",
+          "            try {",
+          "                this.pm.sendRequest(request, (error, response) => {",
+          "                    if(error || (response.code >= 400 && response.code <= 599)) {",
+          "                        let err = error ? error : JSON.stringify(response.json());",
+          "                        console.error(\"При выполнении запроса к серверу возникла ошика.\\n\", err,",
+          "                             \"\\nДля отладки проблемы повторите такой же запрос к вашей программе \" + ",
+          "                             \"на локальном компьютере. Данные запроса:\\n\", JSON.stringify(request));",
+          "",
+          "                        reject(new Error(errorText + err));",
+          "                    }",
+          "                    if(verbose) {",
+          "                        console.log(\"Результат обработки запроса: код состояния - \", response.code, \", тело: \", response.json());",
+          "                    }",
+          "                    if (response.stream.length === 0){",
+          "                        reject(new Error('Отправлено пустое тело ответа'))",
+          "                    }else{",
+          "                        resolve(response.json());",
+          "                    }",
+          "                });",
+          "                ",
+          "            } catch(err) {",
+          "                if(verbose) {",
+          "                    console.error(errorText, err);",
+          "                }",
+          "                return Promise.reject(err);",
+          "            }",
+          "        });",
+          "    }",
+          "",
+          "    async sendRequestForNoBody(method, path, body=null, errorText = \"Ошибка при выполнении запроса: \", verbose=null) {",
+          "        return new Promise((resolve, reject) => {",
+          "            verbose = verbose == null ? this._verbose : verbose;",
+          "            const request = {",
+          "                url: this.baseUrl + path,",
+          "                method: method,",
+          "                body: body == null ? \"\" : JSON.stringify(body),",
+          "                header: { \"Content-Type\": \"application/json\" },",
+          "            };",
+          "            if(verbose) {",
+          "                console.log(\"Отправляю запрос: \", request);",
+          "            }",
+          "",
+          "            try {",
+          "                this.pm.sendRequest(request, (error, response) => {",
+          "                    if(error || (response.code >= 400 && response.code <= 599)) {",
+          "                        let err = error ? error : JSON.stringify(response.json());",
+          "                        console.error(\"При выполнении запроса к серверу возникла ошика.\\n\", err,",
+          "                             \"\\nДля отладки проблемы повторите такой же запрос к вашей программе \" + ",
+          "                             \"на локальном компьютере. Данные запроса:\\n\", JSON.stringify(request));",
+          "",
+          "                        reject(new Error(errorText + err));",
+          "                    }",
+          "                    if(verbose) {",
+          "                        console.log(\"Результат обработки запроса: код состояния - \", response.code, \", тело: \", response.json());",
+          "                    }",
+          "",
+          "                    if (response.stream.length === 0){",
+          "                        // reject(new Error('Отправлено пустое тело ответа'))",
+          "                    }else{",
+          "                        resolve(response.json());",
+          "                    }",
+          "                });",
+          "                ",
+          "            } catch(err) {",
+          "                if(verbose) {",
+          "                    console.error(errorText, err);",
+          "                }",
+          "                return Promise.reject(err);",
+          "            }",
+          "        });",
+          "    }",
+          "};",
+          "",
+          "RandomUtils = class {",
+          "    constructor() {}",
+          "",
+          "    getUser() {",
+          "        return {",
+          "            name: pm.variables.replaceIn('{{$randomFullName}}'),",
+          "            email: pm.variables.replaceIn('{{$randomEmail}}')",
+          "        };",
+          "    }",
+          "",
+          "    getCategory() {",
+          "        return {",
+          "            name: pm.variables.replaceIn('{{$randomWord}}') + Math.floor(Math.random() * 10000 * Math.random()).toString()",
+          "        };",
+          "    }",
+          "",
+          "    getEvent(categoryId) {",
+          "        return {",
+          "            annotation: pm.variables.replaceIn('{{$randomLoremParagraph}}'),",
+          "            category: categoryId,",
+          "            description: pm.variables.replaceIn('{{$randomLoremParagraphs}}'),",
+          "            eventDate: this.getFutureDateTime(),",
+          "            location: {",
+          "                lat: parseFloat(pm.variables.replaceIn('{{$randomLatitude}}')),",
+          "                lon: parseFloat(pm.variables.replaceIn('{{$randomLongitude}}')),",
+          "            },",
+          "            paid: pm.variables.replaceIn('{{$randomBoolean}}'),",
+          "            participantLimit: pm.variables.replaceIn('{{$randomInt}}'),",
+          "            requestModeration: pm.variables.replaceIn('{{$randomBoolean}}'),",
+          "            title: pm.variables.replaceIn('{{$randomLoremSentence}}'),",
+          "        }",
+          "    }",
+          "",
+          "    getCompilation(...eventIds) {",
+          "        return {",
+          "            title: pm.variables.replaceIn('{{$randomLoremSentence}}').slice(0, 50),",
+          "            pinned: pm.variables.replaceIn('{{$randomBoolean}}'),",
+          "            events: eventIds",
+          "        };",
+          "    }",
+          "",
+          "",
+          "    getFutureDateTime(hourShift = 5, minuteShift=0, yearShift=0) {",
+          "        let moment = require('moment');",
+          "",
+          "        let m = moment();",
+          "        m.add(hourShift, 'hour');",
+          "        m.add(minuteShift, 'minute');",
+          "        m.add(yearShift, 'year');",
+          "",
+          "        return m.format('YYYY-MM-DD HH:mm:ss');",
+          "    }",
+          "",
+          "    getWord(length = 1) {",
+          "        let result = '';",
+          "        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';",
+          "        const charactersLength = characters.length;",
+          "        let counter = 0;",
+          "        while (counter < length) {",
+          "            result += characters.charAt(Math.floor(Math.random() * charactersLength));",
+          "            counter += 1;",
+          "        }",
+          "        return result;",
+          "    }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "uid",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "response",
+      "value": ""
+    },
+    {
+      "key": "responseArr",
+      "value": ""
+    },
+    {
+      "key": "source",
+      "value": ""
+    },
+    {
+      "key": "initiatorId",
+      "value": "0",
+      "type": "string"
+    }
+  ]
+}
