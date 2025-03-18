@@ -10,8 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.user.UserDto;
-import ru.practicum.user.exception.AlreadyExistsException;
-import ru.practicum.user.exception.NotFoundException;
+
+import ru.practicum.exception.AlreadyExistsException;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.mappers.UserMapper;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
