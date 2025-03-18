@@ -2,9 +2,10 @@ package ru.practicum.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import ru.practicum.dto.request.StatusRequest;
+
 import java.util.Arrays;
 import java.util.List;
-import ru.practicum.request.model.StatusRequest;
 
 public class StatusRequestValidator implements ConstraintValidator<ValidateStatusRequest, StatusRequest> {
 

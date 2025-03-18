@@ -2,9 +2,10 @@ package ru.practicum.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import ru.practicum.dto.event.enums.Role;
+import ru.practicum.dto.event.enums.StateAction;
+
 import java.util.List;
-import ru.practicum.event.enums.Role;
-import ru.practicum.event.enums.StateAction;
 
 public class StateActionValidator implements ConstraintValidator<ValidStateAction, String> {
 

@@ -5,18 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.comment.dto.CommentDto;
-import ru.practicum.comment.dto.GetCommentsAdminRequest;
 import ru.practicum.comment.mapper.CommentMapper;
 import ru.practicum.comment.model.Comment;
 import ru.practicum.comment.repository.CommentRepository;
-import ru.practicum.event.enums.State;
-import ru.practicum.event.model.Event;
-import ru.practicum.event.repository.EventRepository;
+import ru.practicum.controller.EventController;
+import ru.practicum.dto.comment.CommentDto;
+import ru.practicum.dto.comment.GetCommentsAdminRequest;
+import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.user.model.User;
-import ru.practicum.user.repository.UserRepository;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,8 +26,9 @@ import java.util.List;
 public class CommentServiceImpl implements CommentService {
 
   private final CommentRepository commentRepository;
-  private final UserRepository userRepository;
-  private final EventRepository eventRepository;
+  private final EventController eventStates;
+  //private final UserRepository userRepository;
+  //private final EventRepository eventRepository;
 
   /**
    * /users/{userId}/comments?eventId={eventId}
@@ -37,26 +36,29 @@ public class CommentServiceImpl implements CommentService {
    */
   @Override
   public CommentDto addComment(final CommentDto commentDto) {
-    User user = fetchUser(commentDto.getUserId());
-    Event event = fetchEvent(commentDto.getEventId());
+    Long userId = commentDto.getUserId();
+    Long eventId = commentDto.getEventId();
 
-    if (!State.PUBLISHED.equals(event.getState())) {
-      log.warn("Can not add comment to the event that is not published, event state = {}",
-          event.getState());
-      throw new ConflictException("Cannot save comments for not published event.");
+    // Предполагается, что для проверки состояния нужно использовать объект Event
+    EventFullDto event = eventStates.getEvent(eventId);
+
+    // Проверка на состояние публикации события
+    if (!event.getState().equals("PUBLISHED")) {
+      log.warn("Cannot add comment to an unpublished event, event state = {}", event.getState());
+      throw new ConflictException("Cannot save comments for an unpublished event.");
     }
 
-    Comment comment = CommentMapper.mapTo(commentDto, user, event);
-
+    // Маппинг комментария с учетом userId и eventId
+    Comment comment = CommentMapper.mapTo(commentDto, userId, eventId);
     comment.setCreated(LocalDateTime.now());
 
-    if (user.getId().equals(event.getInitiator().getId())) {
+    // Сравнение по ID инициатора (если текущий пользователь является инициатором события)
+    if (userId.equals(event.getInitiator())) {
       comment.setInitiator(true);
     }
 
     Comment savedComment = commentRepository.save(comment);
     return CommentMapper.mapToCommentDto(savedComment);
-
   }
 
   /**
@@ -67,7 +69,7 @@ public class CommentServiceImpl implements CommentService {
   public void delete(final Long userId, final Long commentId) {
     Comment comment = fetchComment(commentId);
 
-    if (!comment.getUser().getId().equals(userId)) {
+    if (!comment.getUser().equals(userId)) {
       throw new ConflictException("A user can delete only their own comments.");
     }
 
@@ -92,9 +94,9 @@ public class CommentServiceImpl implements CommentService {
   public CommentDto updateUserComment(final Long userId, final Long commentId,
                                       final CommentDto commentDto) {
     Comment comment = fetchComment(commentId);
-    fetchUser(userId);
+//    fetchUser(userId);
 
-    if (!comment.getUser().getId().equals(userId)) {
+    if (!comment.getUser().equals(userId)) {
       throw new ConflictException("A user can update only their own comments.");
     }
 
@@ -111,8 +113,7 @@ public class CommentServiceImpl implements CommentService {
   @Transactional(readOnly = true)
   @Override
   public List<CommentDto> getAllUserComments(final Long userId) {
-    User user = fetchUser(userId);
-    return CommentMapper.mapToCommentDto(commentRepository.findByUserId(user.getId()));
+    return CommentMapper.mapToCommentDto(commentRepository.findByUserId(userId));
   }
 
   /**
@@ -138,30 +139,26 @@ public class CommentServiceImpl implements CommentService {
   }
 
   private List<Comment> getEventComments(final Long eventId, final int from, final int size) {
-    if (!eventRepository.existsById(eventId)) {
-      log.warn("Event with ID {} does not exist in the DB.", eventId);
-      throw new NotFoundException("Event Not Found.");
-    }
     final PageRequest page = PageRequest.of(from / size, size);
     return commentRepository.findAllByEventId(eventId, page).getContent();
   }
-
-  private User fetchUser(final Long userId) {
-    log.debug("Fetching user with ID {}", userId);
-    return userRepository.findById(userId)
-        .orElseThrow(() -> {
-          log.warn("User with ID {} not found.", userId);
-          return new NotFoundException("The user not found.");
-        });
-  }
-
-  private Event fetchEvent(final Long eventId) {
-    return eventRepository.findById(eventId)
-        .orElseThrow(() -> {
-          log.warn("Event with ID {} not found.", eventId);
-          return new NotFoundException("The event not found.");
-        });
-  }
+//
+//  private User fetchUser(final Long userId) {
+//    log.debug("Fetching user with ID {}", userId);
+//    return userRepository.findById(userId)
+//        .orElseThrow(() -> {
+//          log.warn("User with ID {} not found.", userId);
+//          return new NotFoundException("The user not found.");
+//        });
+//  }
+//
+//  private Event fetchEvent(final Long eventId) {
+//    return eventRepository.findById(eventId)
+//        .orElseThrow(() -> {
+//          log.warn("Event with ID {} not found.", eventId);
+//          return new NotFoundException("The event not found.");
+//        });
+//  }
 
   private Comment fetchComment(final Long commentId) {
     return commentRepository.findById(commentId)

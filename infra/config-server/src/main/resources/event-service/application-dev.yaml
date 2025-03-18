@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:ewm-dev
+    username: postgres
+    password: admin
+management:
+  endpoints.web.exposure.include: loggers
+  endpoint.loggers.enabled: true

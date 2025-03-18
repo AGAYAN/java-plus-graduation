@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:6543/ewm-dev
+    username: postgres
+    password: admin

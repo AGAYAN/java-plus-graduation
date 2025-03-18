@@ -1,7 +1,9 @@
 package ru.practicum.comment.service;
 
-import ru.practicum.comment.dto.GetCommentsAdminRequest;
-import ru.practicum.comment.dto.CommentDto;
+
+
+import ru.practicum.dto.comment.CommentDto;
+import ru.practicum.dto.comment.GetCommentsAdminRequest;
 
 import java.util.List;
 
