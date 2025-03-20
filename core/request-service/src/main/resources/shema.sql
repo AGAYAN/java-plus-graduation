@@ -4,9 +4,7 @@ CREATE TABLE IF NOT EXISTS request
     created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     status VARCHAR(10) NOT NULL CHECK (status IN ('PENDING', 'CANCELED', 'CONFIRMED', 'REJECTED')),
     user_id BIGINT NOT NULL,
-    event_id BIGINT NOT NULL,
-    CONSTRAINT fk_request_event FOREIGN KEY (event_id) REFERENCES event (id) ON DELETE CASCADE,
-    CONSTRAINT fk_requester FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    event_id BIGINT NOT NULL
 );
 
 -- CREATE INDEX IF NOT EXISTS idx_event_category ON event (category_id);

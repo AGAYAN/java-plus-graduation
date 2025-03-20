@@ -14,6 +14,9 @@ spring:
             - classpath:ewm-main-service
             - classpath:ewm-stats-server
             - classpath:gateway-server
+            - classpath:event-service
+            - classpath:request-service
+            - classpath:user-service
 
 eureka:
   instance:

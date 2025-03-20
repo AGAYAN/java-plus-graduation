@@ -32,8 +32,7 @@ CREATE TABLE IF NOT EXISTS event
     request_moderation BOOLEAN NOT NULL DEFAULT TRUE,
     state VARCHAR(20) NOT NULL CHECK (state IN ('PENDING', 'PUBLISHED', 'CANCELED')),
     CONSTRAINT pk_event PRIMARY KEY (id),
-    CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES category (id) ON DELETE RESTRICT,
-    CONSTRAINT fk_initiator FOREIGN KEY (initiator_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES category (id) ON DELETE RESTRICT
 );
 
 CREATE INDEX IF NOT EXISTS idx_event_category ON event (category_id);

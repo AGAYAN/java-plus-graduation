@@ -170,7 +170,7 @@ services:
       interval: 10s
       retries: 15
 
-  #  main-service (previously subscription-db)
+  #  main-service
   main-service:
     build: core/main-service
     container_name: main-service

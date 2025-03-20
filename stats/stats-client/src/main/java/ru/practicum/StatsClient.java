@@ -15,7 +15,10 @@ public class StatsClient {
 
     private final WebClient webClient;
 
-    public StatsClient(WebClient.Builder webClientBuilder, @Value("${stats.client.url}") String baseUrl) {
+    @Value("${stats.client.url}")
+    private String baseUrl;
+
+    public StatsClient(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 
