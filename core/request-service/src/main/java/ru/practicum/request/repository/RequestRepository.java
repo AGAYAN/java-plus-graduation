@@ -8,18 +8,18 @@ import java.util.List;
 
 public interface RequestRepository extends JpaRepository<ParticipationRequest, Long> {
 
-  List<ParticipationRequest> findAllByRequesterId(List<Long> userId);
+  List<ParticipationRequest> findAllBy(List<Long> userId);
 
-  List<ParticipationRequest> findAllByEventIdAndEventInitiatorId(Long userId, Long initiatorId);
+  List<ParticipationRequest> findAllByEventAndRequester(Long userId, Long initiatorId);
 
-  int countAllByEventIdAndStatus(Long eventId, StatusRequest status);
+  int countAllByEventAndStatus(Long eventId, StatusRequest status);
 
-  ParticipationRequest findByRequesterIdAndEventId(Long userId, Long eventId);
+  ParticipationRequest findByRequesterAndEvent(Long userId, Long eventId);
 
-  List<ParticipationRequest> findAllByEventIdInAndStatus(List<Long> eventIds,
+  List<ParticipationRequest> findAllByEventInAndStatus(List<Long> eventIds,
                                                          StatusRequest statusRequest);
 
-  List<ParticipationRequest> findAllByIdInAndEventIdAndStatus(List<Long> requestIds,
+  List<ParticipationRequest> findAllByIdInAndEventAndStatus(List<Long> requestIds,
                                                                  Long eventId,
                                                                  StatusRequest statusRequest);
 

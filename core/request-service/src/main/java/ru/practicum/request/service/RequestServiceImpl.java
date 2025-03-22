@@ -49,7 +49,7 @@ public class RequestServiceImpl implements RequestService {
 //      throw new ConflictException("Нельзя участвовать в неопубликованном событии");
 //    }
 
-    ParticipationRequest existingRequest = requestRepository.findByRequesterIdAndEventId(userId,
+    ParticipationRequest existingRequest = requestRepository.findByRequesterAndEvent(userId,
         eventId);
     if (existingRequest != null && !StatusRequest.CANCELED.equals(existingRequest.getStatus())) {
       throw new NotFoundException("Вы уже отправили запрос на это событие");
@@ -81,7 +81,7 @@ public class RequestServiceImpl implements RequestService {
 
 //    userClient.getUser(userId);
 
-    return requestRepository.findAllByRequesterId(userId)
+    return requestRepository.findAllBy(userId)
         .stream()
         .map(RequestMapper::mapToDto)
         .toList();
@@ -121,7 +121,7 @@ public class RequestServiceImpl implements RequestService {
             initiatorId);
     //validateUserExist(initiatorId, eventId);
     return RequestMapper.mapToDto(
-            requestRepository.findAllByEventIdAndEventInitiatorId(eventId, initiatorId));
+            requestRepository.findAllByEventAndRequester(eventId, initiatorId));
   } // первый
 
   private EventRequestStatusUpdateResult autoConfirmRequests(final List<Long> requestIds,
@@ -137,7 +137,7 @@ public class RequestServiceImpl implements RequestService {
   private List<ParticipationRequest> getPendingRequests(final List<Long> requestIds,
                                                         final Long eventId) {
     log.debug("Fetching participation requests with IDs:{} and PENDING status.", requestIds);
-    final List<ParticipationRequest> requests = requestRepository.findAllByIdInAndEventIdAndStatus(
+    final List<ParticipationRequest> requests = requestRepository.findAllByIdInAndEventAndStatus(
             requestIds, eventId, StatusRequest.PENDING);
     if (requestIds.size() > requests.size()) {
       log.warn("StatusRequest should be PENDING for all requests to be updated.");
@@ -185,7 +185,7 @@ public class RequestServiceImpl implements RequestService {
     }
     final List<Long> eventIds = events.stream().map(EventFullDto::getId).toList();
     final Map<Long, List<ParticipationRequest>> confirmedRequests =
-            requestRepository.findAllByEventIdInAndStatus(eventIds, StatusRequest.CONFIRMED)
+            requestRepository.findAllByEventInAndStatus(eventIds, StatusRequest.CONFIRMED)
                     .stream()
                     .collect(Collectors.groupingBy(
                             participantRequest -> participantRequest.getEvent()));

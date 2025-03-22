@@ -27,6 +27,7 @@ public class CommentServiceImpl implements CommentService {
 
   private final CommentRepository commentRepository;
   private final EventController eventStates;
+
   //private final UserRepository userRepository;
   //private final EventRepository eventRepository;
 
@@ -40,7 +41,7 @@ public class CommentServiceImpl implements CommentService {
     Long eventId = commentDto.getEventId();
 
     // Предполагается, что для проверки состояния нужно использовать объект Event
-    EventFullDto event = eventStates.getEvent(eventId);
+    EventFullDto event = eventStates.getEvent(commentDto.getEventId());
 
     // Проверка на состояние публикации события
     if (!event.getState().equals("PUBLISHED")) {
@@ -113,7 +114,7 @@ public class CommentServiceImpl implements CommentService {
   @Transactional(readOnly = true)
   @Override
   public List<CommentDto> getAllUserComments(final Long userId) {
-    return CommentMapper.mapToCommentDto(commentRepository.findByUserId(userId));
+    return CommentMapper.mapToCommentDto(commentRepository.findByUser(userId));
   }
 
   /**

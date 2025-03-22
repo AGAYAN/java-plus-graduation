@@ -20,3 +20,6 @@ eureka:
     service-url:
       defaultZone: http://discovery-server:8761/eureka/
     register-with-eureka: true
+stats:
+  client:
+    url: http://localhost:8080

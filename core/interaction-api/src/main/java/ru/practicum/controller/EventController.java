@@ -14,14 +14,12 @@ import ru.practicum.dto.event.UpdateEventUserRequest;
 
 @FeignClient(name = "event-service", path = "/events")
 public interface EventController {
-    @GetMapping("/{eventId}")
-    EventFullDto getEvent(@PathVariable Long eventId);
 
+    @GetMapping("/{eventId}")
+    EventFullDto getEvent(@PathVariable("eventId") Long eventId);
 
     @PatchMapping("/{eventId}")
     ResponseEntity<EventFullDto> updateEvent(
-            @PathVariable("userId") @NotNull @Positive Long userId,
-            @PathVariable("eventId")@NotNull @Positive Long eventId,
+            @PathVariable("eventId") @NotNull @Positive Long eventId,
             @Validated @RequestBody UpdateEventUserRequest eventDto);
-
 }

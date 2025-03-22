@@ -22,10 +22,10 @@ public class ParticipationRequest {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @JoinColumn(name = "event_id")
+  @JoinColumn(name = "event_id", nullable = false)
   private Long event;
 
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private Long requester;
 
   @Column(nullable = false)

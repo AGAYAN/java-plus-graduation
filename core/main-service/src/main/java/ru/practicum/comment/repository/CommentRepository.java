@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-  List<Comment> findByUserId(Long userId);
+  List<Comment> findByUser(Long userId);
 
   Page<Comment> findAllByEventId(Long eventId, PageRequest page);
 
