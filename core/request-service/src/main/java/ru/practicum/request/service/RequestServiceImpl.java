@@ -81,7 +81,7 @@ public class RequestServiceImpl implements RequestService {
 
 //    userClient.getUser(userId);
 
-    return requestRepository.findAllBy(userId)
+    return requestRepository.findAllByRequesterIn(userId)
         .stream()
         .map(RequestMapper::mapToDto)
         .toList();
@@ -108,9 +108,6 @@ public class RequestServiceImpl implements RequestService {
 
     return RequestMapper.mapToDto(participationRequest);
   }
-
-
-
 
 
 

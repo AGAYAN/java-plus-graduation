@@ -205,7 +205,7 @@ public class EventServiceImpl implements EventService {
     log.debug("Fetching events posted by user with ID={}.", initiatorId);
     //validateUserExist(initiatorId);
     final PageRequest page = PageRequest.of(from / size, size);
-    final List<Event> events = eventRepository.findAllByInitiatorId(initiatorId, page).getContent();
+    final List<Event> events = eventRepository.findAllByInitiator(initiatorId, page).getContent();
     setConfirmedRequests(events);
     setViews(events);
     return EventMapper.toShortDto(events);
@@ -438,7 +438,7 @@ public class EventServiceImpl implements EventService {
 
   private void validateUserExist(final Long userId, final Long eventId) {
     userController.getUser(userId);
-    if (!eventRepository.existsByIdAndInitiatorId(eventId, userId)) {
+    if (!eventRepository.existsByIdAndInitiator(eventId, userId)) {
       log.warn("Event ID={} with intiator ID={} not exists.", userId, eventId);
       throw new NotFoundException("Event with current initiator not found.");
     }

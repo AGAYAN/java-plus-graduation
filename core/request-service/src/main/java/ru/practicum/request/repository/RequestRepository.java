@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface RequestRepository extends JpaRepository<ParticipationRequest, Long> {
 
-  List<ParticipationRequest> findAllBy(List<Long> userId);
+  List<ParticipationRequest> findAllByRequesterIn(List<Long> userIds);
 
   List<ParticipationRequest> findAllByEventAndRequester(Long userId, Long initiatorId);
 

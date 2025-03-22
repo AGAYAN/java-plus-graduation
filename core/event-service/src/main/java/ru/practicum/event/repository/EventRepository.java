@@ -14,7 +14,7 @@ import java.util.Set;
 
 public interface EventRepository extends JpaRepository<Event, Long>, EventQueryRepository {
 
-  Page<Event> findAllByInitiatorId(Long initiatorId, PageRequest page);
+  Page<Event> findAllByInitiator(Long initiatorId, PageRequest page);
 
   @Query("""
       SELECT e AS event, COUNT(r.id) AS confirmedRequests
@@ -31,9 +31,9 @@ public interface EventRepository extends JpaRepository<Event, Long>, EventQueryR
 
   Optional<Event> findByIdAndState(Long id, State state);
 
-  boolean existsByIdAndInitiatorId(Long eventId, Long userId);
+  boolean existsByIdAndInitiator(Long eventId, Long userId);
 
-  boolean existsByCategoryId(Long id);
+  boolean existsByCategory_Id(Long id);
 
   Set<Event> findAllDistinctByIdIn(Set<Long> eventIds);
 }
