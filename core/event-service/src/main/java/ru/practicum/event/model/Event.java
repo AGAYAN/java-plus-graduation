@@ -6,6 +6,8 @@ import lombok.*;
 import lombok.experimental.Accessors;
 import ru.practicum.category.model.Category;
 import ru.practicum.dto.event.Location;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.event.enums.State;
 
 import java.time.LocalDateTime;
@@ -48,8 +50,11 @@ public class Event {
   @Column(name = "created_on", nullable = false)
   private LocalDateTime createdOn;
 
+  @Column(name = "initiator_id", nullable = false)
+  private Long initiatorId;
+
   @Transient
-  private Long initiator;
+  private UserDto initiator;
 
   @Column
   private Integer participantLimit = 0;

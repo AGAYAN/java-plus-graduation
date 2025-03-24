@@ -12,6 +12,7 @@ import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.NewEventDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.model.Event;
 
@@ -37,7 +38,7 @@ public class EventMapper {
         .setLocation(eventDto.getLocation())
         .setPaid(eventDto.getPaid())
         .setCreatedOn(LocalDateTime.now())
-        .setInitiator(initiator.getId())
+        .setInitiator(initiator)
         .setParticipantLimit(eventDto.getParticipantLimit())
         .setTitle(eventDto.getTitle())
         .setRequestModeration(eventDto.getRequestModeration())
@@ -75,7 +76,7 @@ public class EventMapper {
         event.getConfirmedRequests(),
         event.getEventDate(),
         event.getId(),
-        event.getInitiator(),
+            event.getInitiator().getId(),
         event.getPaid(),
         event.getTitle(),
         event.getViews());

@@ -1,6 +1,7 @@
 package ru.practicum.event.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -58,9 +59,15 @@ public class PublicEventController {
     }
 
     @GetMapping("/{eventId}")
-    public EventFullDto getEventsById(@PathVariable Long eventId, HttpServletRequest request) {
+    public EventFullDto getEventById(@PathVariable Long eventId, HttpServletRequest request) {
         log.info("Request received GET /events with id {}", eventId);
         EventFullDto event = eventService.getEvent(eventId);
+
+        if (event == null) {
+            log.error("Event not found for id {}", eventId);
+            throw new NotFoundException("Event not found");
+        }
+
         log.info("Event received: {}", event);
         saveHitStatistic(request);
         return event;
@@ -75,8 +82,8 @@ public class PublicEventController {
         statsClient.saveHit(hitDto);
     }
 
-    @GetMapping("/{eventId}")
-    public EventFullDto getEvent(@PathVariable Long eventId) {
-        return eventService.getEvent(eventId);
-    }
+//    @GetMapping("/{eventId}")
+//    public EventFullDto getEvent(@PathVariable Long eventId) {
+//        return eventService.getEvent(eventId);
+//    }
 }

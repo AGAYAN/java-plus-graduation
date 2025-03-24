@@ -101,7 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
     if (!repository.existsById(id)) {
       throw new NotFoundException("Category with id " + id + " not found");
     }
-    if (eventRepository.existsByCategory_Id(id)) {
+    if (eventRepository.existsByCategoryId(id)) {
       log.warn("Category with id {} is in use by an event and cannot be deleted.", id);
       throw new ConflictException("Cannot be deleted; it's in use by an event.");
     }

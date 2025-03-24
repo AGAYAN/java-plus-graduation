@@ -22,4 +22,6 @@ public class UserDto {
     @Length(min = 6, max = 254)
     @Email
     private String email;
+
+
 }

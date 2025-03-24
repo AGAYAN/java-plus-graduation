@@ -1,5 +1,6 @@
 package ru.practicum.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -16,7 +17,7 @@ import ru.practicum.dto.event.UpdateEventUserRequest;
 public interface EventController {
 
     @GetMapping("/{eventId}")
-    EventFullDto getEvent(@PathVariable("eventId") Long eventId);
+    EventFullDto getEventById(@PathVariable Long eventId, HttpServletRequest request);
 
     @PatchMapping("/{eventId}")
     ResponseEntity<EventFullDto> updateEvent(

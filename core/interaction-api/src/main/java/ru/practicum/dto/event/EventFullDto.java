@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import ru.practicum.dto.category.CategoryDto;
-import ru.practicum.dto.user.UserShortDto;
+import ru.practicum.dto.user.UserDto;
 
 import java.time.LocalDateTime;
 
@@ -46,7 +46,7 @@ public class EventFullDto {
 
   private Long id;
 
-  private Long initiator; // переделать
+  private UserDto initiator; // переделать
 
   private Location location;
 
@@ -67,7 +67,7 @@ public class EventFullDto {
 
   public EventFullDto(String annotation, CategoryDto category, Integer confirmedRequests,
                       LocalDateTime createdOn,
-                      String description, LocalDateTime eventDate, Long id, Long initiator,
+                      String description, LocalDateTime eventDate, Long id, UserDto initiator,
                       Location location, Boolean paid, Integer participantLimit,
                       LocalDateTime publishedOn,
                       Boolean requestModeration, String state, String title) {
@@ -87,5 +87,6 @@ public class EventFullDto {
     this.state = state;
     this.title = title;
   }
+
 
 }

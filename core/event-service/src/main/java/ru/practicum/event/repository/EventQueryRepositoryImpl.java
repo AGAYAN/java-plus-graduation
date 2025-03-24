@@ -277,6 +277,10 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
         return tuples.stream().map(tuple -> {
             String state = Optional.ofNullable(tuple.get("state", State.class)).map(State::name).orElse("");
 
+            UserDto initiator = new UserDto();
+            initiator.setId(tuple.get("initiatorId", Long.class));
+            initiator.setName(tuple.get("initiatorName", String.class));
+
             return new EventFullDto(
                 tuple.get("annotation", String.class),
                 new CategoryDto(tuple.get("categoryId", Long.class), tuple.get("categoryName", String.class)),
@@ -285,7 +289,7 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
                 Optional.ofNullable(tuple.get("description", String.class)).orElse(""),
                 tuple.get("eventDate", LocalDateTime.class),
                 tuple.get("eventId", Long.class),
-                    new UserShortDto(tuple.get("initiatorId", Long.class), tuple.get("initiatorName", String.class)).getId(),
+                    initiator,
                 new Location(tuple.get("lat", Float.class), tuple.get("lon", Float.class)),
                 tuple.get("paid", Boolean.class),
                 tuple.get("participantLimit", Integer.class),

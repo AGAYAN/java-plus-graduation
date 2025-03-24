@@ -39,7 +39,7 @@ public class RequestServiceImpl implements RequestService {
   public ParticipationRequestDto addRequest(final Long userId, final Long eventId) {
     Long user = userClient.getUser(userId).getId();
 
-    Long event = eventClient.getEvent(eventId).getId();
+    Long event = eventClient.getEventById(eventId, null).getId();
 
 //    if (user.equals(event.getInitiator())) {
 //      throw new ConflictException("Нельзя добавить запрос на свое собственное событие");
@@ -203,7 +203,7 @@ public class RequestServiceImpl implements RequestService {
             updateStatusDto.getRequestIds(), eventId, initiatorId, updateStatusDto.getStatus());
 
     //validateUserExist(initiatorId);
-    final EventFullDto event = eventClient.getEvent(eventId);
+    final EventFullDto event = eventClient.getEventById(eventId, null);
    //final EventFullDto event = fetchEvent(eventId, initiatorId);
     final StatusRequest newStatus = updateStatusDto.getStatus();
     final Boolean isModerated = event.getRequestModeration(); //
