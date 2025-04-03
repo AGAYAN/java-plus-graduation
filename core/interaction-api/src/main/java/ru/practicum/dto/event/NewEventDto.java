@@ -3,7 +3,6 @@ package ru.practicum.dto.event;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import ru.practicum.dto.validation.MinimumHoursFromNow;
 
 import java.time.LocalDateTime;
 

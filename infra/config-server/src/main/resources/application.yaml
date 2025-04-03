@@ -1,6 +1,5 @@
 server:
-  port: 0
-
+  port: 8888
 spring:
   application:
     name: config-server
@@ -11,18 +10,14 @@ spring:
       server:
         native:
           searchLocations:
-            - classpath:ewm-main-service
-            - classpath:ewm-stats-server
-            - classpath:gateway-server
-            - classpath:event-service
-            - classpath:request-service
-            - classpath:user-service
-
+            - classpath:core/{application}
+            - classpath:infra/{application}
+            - classpath:stats/{application}
 eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.value}
   client:
     service-url:
-      defaultZone: http://discovery-server:8761/eureka/
+      defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true

@@ -23,6 +23,7 @@ public class UserController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public UserDto createUser(@Validated @RequestBody UserDto userDto) {
+    log.info("Request to create usersadasdasdmnjkasnjdnejfnknfjnqjewnfjqwnfj2enjifnjf23n: {}", userDto);
     return userService.addUser(userDto);
   }
 

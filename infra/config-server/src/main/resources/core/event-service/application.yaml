@@ -2,6 +2,7 @@ spring:
   main:
     banner-mode: off
   datasource:
+    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://requests-db:5432/requests
     username: postgres
     password: admin
@@ -14,10 +15,10 @@ spring:
       mode: always
   cloud:
     openfeign:
-      circuitbreaker:
+      circuit-breaker:
         enabled: true
 resilience4j:
-  circuitbreaker:
+  circuit-breaker:
     configs:
       default:
         slidingWindowSize: 50

@@ -22,4 +22,7 @@ eureka:
     register-with-eureka: true
 stats:
   client:
-    url: http://localhost:9090
+    url: http://localhost:8888
+
+server:
+  port: 0
