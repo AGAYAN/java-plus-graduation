@@ -13,24 +13,24 @@ import java.util.List;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/users/{userId}/requests")
+@RequestMapping("/users")
 public class PrivateRequestController {
 
     private final RequestService requestService;
 
-    @PostMapping
+    @PostMapping("/{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
     private ParticipationRequestDto addRequest(@PathVariable @NonNull Long userId,
                                                @RequestParam @NonNull Long eventId) {
         return requestService.addRequest(userId, eventId);
     }
 
-    @GetMapping
-    private List<ParticipationRequestDto> getAllRequest(@PathVariable @NonNull List<Long> userId) {
+    @GetMapping("/{userId}/requests")
+    public List<ParticipationRequestDto> getAllRequest(@RequestParam("userId") @NonNull List<Long> userId) {
         return requestService.getAll(userId);
-    } // использовать!
+    }
 
-    @PatchMapping("/{requestId}/cancel")
+    @PatchMapping("/{userId}/requests/{requestId}/cancel")
     private ParticipationRequestDto cancel(@PathVariable @NonNull Long userId,
                                            @PathVariable @NonNull Long requestId) {
         return requestService.cancel(userId, requestId);

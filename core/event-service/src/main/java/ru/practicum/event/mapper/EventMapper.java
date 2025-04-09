@@ -5,11 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import ru.practicum.category.mapper.CategoryMapper;
 
+import ru.practicum.category.model.Category;
 import ru.practicum.dto.category.CategoryDto;
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.EventRequestStatusUpdateResult;
-import ru.practicum.dto.event.EventShortDto;
-import ru.practicum.dto.event.NewEventDto;
+import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;
@@ -38,6 +36,7 @@ public class EventMapper {
         .setLocation(eventDto.getLocation())
         .setPaid(eventDto.getPaid())
         .setCreatedOn(LocalDateTime.now())
+        .setInitiatorId(initiator.getId())
         .setInitiator(initiator)
         .setParticipantLimit(eventDto.getParticipantLimit())
         .setTitle(eventDto.getTitle())
@@ -90,6 +89,48 @@ public class EventMapper {
         .map(EventMapper::toShortDto)
         .toList();
   }
+
+  public static Event updateEventFromAdminRequest(Event event, UpdateEventAdminRequest request, Category category) {
+    if (request.getAnnotation() != null) {
+      event.setAnnotation(request.getAnnotation());
+    }
+    if (request.getCategory() != null) {
+      event.setCategory(category);
+    }
+    if (request.getDescription() != null) {
+      event.setDescription(request.getDescription());
+    }
+    if (request.getEventDate() != null) {
+      event.setEventDate(request.getEventDate());
+    }
+    if (request.getLocation() != null) {
+      event.setLocation(request.getLocation());
+    }
+    if (request.getPaid() != null) {
+      event.setPaid(request.getPaid());
+    }
+    if (request.getParticipantLimit() != null) {
+      event.setParticipantLimit(request.getParticipantLimit());
+    }
+    if (request.getRequestModeration() != null) {
+      event.setRequestModeration(request.getRequestModeration());
+    }
+    if (request.getTitle() != null) {
+      event.setTitle(request.getTitle());
+    }
+
+    // обработка действия с состоянием
+    if (request.getStateAction() != null) {
+      switch (request.getStateAction()) {
+        case "PUBLISH_EVENT" -> event.setState(State.PUBLISHED);
+        case "REJECT_EVENT" -> event.setState(State.CANCELED);
+        default -> throw new IllegalArgumentException("Unknown stateAction: " + request.getStateAction());
+      }
+    }
+
+    return event;
+  }
+
 
 //  public static EventRequestStatusUpdateResult toEventRequestStatusUpdateResult(
 //          final List<ParticipationRequest> confirmedRequests, final List<ParticipationRequest> rejectedRequests) {

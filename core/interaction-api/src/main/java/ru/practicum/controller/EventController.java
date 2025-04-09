@@ -13,14 +13,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.UpdateEventUserRequest;
 
-@FeignClient(name = "event-service", path = "/events")
+@FeignClient(name = "event-service")
 public interface EventController {
 
-    @GetMapping("/{eventId}")
+    @GetMapping("/events/{eventId}")
     EventFullDto getEventById(@PathVariable Long eventId, HttpServletRequest request);
 
-    @PatchMapping("/{eventId}")
+    @PatchMapping("/events/{eventId}")
     ResponseEntity<EventFullDto> updateEvent(
             @PathVariable("eventId") @NotNull @Positive Long eventId,
             @Validated @RequestBody UpdateEventUserRequest eventDto);
+
+    @GetMapping("/users/{userId}/events/{eventId}")
+    ResponseEntity<EventFullDto> getEvent(
+            @PathVariable("userId") @NotNull @Positive Long userId,
+            @PathVariable("eventId")@NotNull @Positive Long eventId);
 }

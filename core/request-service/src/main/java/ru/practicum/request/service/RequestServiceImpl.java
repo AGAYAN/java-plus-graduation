@@ -3,6 +3,7 @@ package ru.practicum.request.service;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.controller.EventController;
@@ -16,7 +17,6 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.request.repository.RequestRepository;
-
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,34 +39,41 @@ public class RequestServiceImpl implements RequestService {
   public ParticipationRequestDto addRequest(final Long userId, final Long eventId) {
     Long user = userClient.getUser(userId).getId();
 
-    Long event = eventClient.getEventById(eventId, null).getId();
+    if (eventId == null || eventId <= 0) {
+      throw new IllegalArgumentException("ID события должен быть больше 0");
+    }
 
-//    if (user.equals(event.getInitiator())) {
-//      throw new ConflictException("Нельзя добавить запрос на свое собственное событие");
-//    }
-//
+    ResponseEntity<EventFullDto> eventResponse = eventClient.getEvent(userId, eventId);
+    EventFullDto event = eventResponse.getBody();
+
+    if (event == null) {
+      throw new NotFoundException("Событие не найдено");
+    }
+
+    if (user.equals(event.getInitiator())) {
+      throw new ConflictException("Нельзя подать заявку на участие в своём собственном событии");
+    }
+
 //    if (!event.getState().equals(State.PUBLISHED)) {
 //      throw new ConflictException("Нельзя участвовать в неопубликованном событии");
 //    }
 
-    ParticipationRequest existingRequest = requestRepository.findByRequesterAndEvent(userId,
-        eventId);
+    ParticipationRequest existingRequest = requestRepository.findByRequesterAndEvent(userId, eventId);
     if (existingRequest != null && !StatusRequest.CANCELED.equals(existingRequest.getStatus())) {
-      throw new NotFoundException("Вы уже отправили запрос на это событие");
+      throw new ConflictException("Вы уже отправили заявку на участие в этом событии");
     }
-//
-//    int confirmedRequests = requestRepository.countAllByEventIdAndStatus(eventId,
-//        StatusRequest.CONFIRMED);
+
+    int confirmedRequests = requestRepository.countAllByEventAndStatus(eventId, StatusRequest.CONFIRMED);
 
     ParticipationRequest participationRequest = new ParticipationRequest(userId, eventId);
-//
-//    if (event.getParticipantLimit() != 0 && event.getParticipantLimit() == confirmedRequests) {
-//      throw new ConflictException("Лимит запроса закончен");
-//    }
-//
-//    if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-//      participationRequest.setStatus(StatusRequest.CONFIRMED);
-//    }
+
+    if (event.getParticipantLimit() != 0 && event.getParticipantLimit() <= confirmedRequests) {
+      throw new ConflictException("Достигнут лимит участников для этого события");
+    }
+
+    if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
+      participationRequest.setStatus(StatusRequest.CONFIRMED);
+    }
 
     ParticipationRequest savedRequest = requestRepository.save(participationRequest);
 
@@ -79,7 +86,7 @@ public class RequestServiceImpl implements RequestService {
 //    userRepository.findById(userId)
 //        .orElseThrow(() -> new NotFoundException("Нету такого user"));
 
-//    userClient.getUser(userId);
+    //userClient.getUser(userId.getFirst());
 
     return requestRepository.findAllByRequesterIn(userId)
         .stream()

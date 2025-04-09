@@ -23,3 +23,6 @@ eureka:
 stats:
   client:
     url: http://localhost:8081
+
+server:
+  port: 0

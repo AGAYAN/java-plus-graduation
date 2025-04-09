@@ -14,6 +14,7 @@ import ru.practicum.category.mapper.CategoryMapper;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.service.CategoryService;
 import ru.practicum.controller.EventController;
+
 import ru.practicum.controller.RequestController;
 import ru.practicum.controller.UserController;
 import ru.practicum.dto.category.CategoryDto;
@@ -102,7 +103,7 @@ public class EventServiceImpl implements EventService {
     }
 
     if (param.getLocation() != null) {
-      event.setLocation((Location) param.getLocation());
+      event.setLocation(param.getLocation());
     }
 
     if (param.getPaid() != null) {
@@ -350,8 +351,7 @@ public class EventServiceImpl implements EventService {
     return String.format("/events/%d", eventId);
   }
 
-  private void setConfirmedRequests(final List<Event> events
-  ) {
+  private void setConfirmedRequests(final List<Event> events) {
     log.debug("Setting confirmed requests to the events list {}.", events);
 
     if (events.isEmpty()) {
@@ -359,24 +359,22 @@ public class EventServiceImpl implements EventService {
       return;
     }
 
-    // Получаем список eventId для поиска запросов
     final List<Long> eventIds = events.stream().map(Event::getId).toList();
 
-    // Получаем все запросы по eventIds через Feign-клиент
     List<ParticipationRequestDto> allRequests = requestController.getAllRequest(eventIds);
 
-    // Группируем запросы по eventId и фильтруем только CONFIRMED
     final Map<Long, List<ParticipationRequestDto>> confirmedRequests = allRequests.stream()
             .filter(request -> StatusRequest.valueOf(request.getStatus()).equals(StatusRequest.CONFIRMED))
             .collect(Collectors.groupingBy(ParticipationRequestDto::getEventId));
 
-    // Устанавливаем количество подтвержденных запросов для каждого события
     events.forEach(event ->
             event.setConfirmedRequests(
-                    confirmedRequests.getOrDefault(event.getId(), List.of()).size()));
+                    confirmedRequests.getOrDefault(event.getId(), List.of()).size())
+    );
 
     log.debug("Confirmed requests have been set successfully to the events with IDs {}.", eventIds);
   }
+
 
   private void patchEventFields(final Event target, final UpdateEventUserRequest dataSource) {
     log.debug("Apply the patch on Event fields.");
