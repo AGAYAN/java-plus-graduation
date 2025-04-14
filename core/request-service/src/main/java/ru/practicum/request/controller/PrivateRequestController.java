@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.request.service.RequestService;
 
@@ -24,15 +25,28 @@ public class PrivateRequestController {
                                                @RequestParam @NonNull Long eventId) {
         return requestService.addRequest(userId, eventId);
     }
-
-    @GetMapping("/{userId}/requests")
-    public List<ParticipationRequestDto> getAllRequest(@RequestParam("userId") @NonNull List<Long> userId) {
-        return requestService.getAll(userId);
-    }
+//
+//    @GetMapping("/{userId}/requests")
+//    public List<ParticipationRequestDto> getAllRequest(@RequestParam("userId") @NonNull List<Long> userId) {
+//        return requestService.getAll(userId);
+//    }
 
     @PatchMapping("/{userId}/requests/{requestId}/cancel")
     private ParticipationRequestDto cancel(@PathVariable @NonNull Long userId,
                                            @PathVariable @NonNull Long requestId) {
         return requestService.cancel(userId, requestId);
     }
+
+//    @GetMapping("/request")
+//    public List<ParticipationRequestDto> getAllRequests(@RequestParam List<Long> eventIds) {
+//        return requestService.getConfirmedRequestsByEventIds(eventIds);
+//    }
+
+
+    @GetMapping("/request")
+    public void getAllRequests(@RequestParam List<EventFullDto> eventIds) {
+        requestService.setConfirmedRequests(eventIds);
+    }
+
+
 }

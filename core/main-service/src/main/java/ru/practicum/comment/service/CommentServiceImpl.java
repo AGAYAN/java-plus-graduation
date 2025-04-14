@@ -41,7 +41,7 @@ public class CommentServiceImpl implements CommentService {
     Long eventId = commentDto.getEventId();
 
     // Предполагается, что для проверки состояния нужно использовать объект Event
-    EventFullDto event = eventStates.getEventById(commentDto.getEventId(), null);
+    EventFullDto event = eventStates.getEventById(commentDto.getEventId());
 
     // Проверка на состояние публикации события
     if (!event.getState().equals("PUBLISHED")) {

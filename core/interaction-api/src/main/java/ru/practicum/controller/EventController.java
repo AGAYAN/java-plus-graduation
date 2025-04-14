@@ -17,7 +17,7 @@ import ru.practicum.dto.event.UpdateEventUserRequest;
 public interface EventController {
 
     @GetMapping("/events/{eventId}")
-    EventFullDto getEventById(@PathVariable Long eventId, HttpServletRequest request);
+    EventFullDto getEventById(@PathVariable Long eventId);
 
     @PatchMapping("/events/{eventId}")
     ResponseEntity<EventFullDto> updateEvent(

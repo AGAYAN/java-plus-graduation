@@ -8,9 +8,7 @@ import ru.practicum.category.mapper.CategoryMapper;
 import ru.practicum.category.model.Category;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.*;
-import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.user.UserDto;
-import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.model.Event;
 

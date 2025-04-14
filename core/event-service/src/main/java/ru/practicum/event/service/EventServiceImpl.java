@@ -73,59 +73,19 @@ public class EventServiceImpl implements EventService {
   @Override
   public EventFullDto updateEvent(final long eventId, final UpdateEventAdminRequest param) {
     Event event = eventRepository.findById(eventId)
-        .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found."));
+            .orElseThrow(() -> new NotFoundException("Событие с id = " + eventId + " не найдено"));
 
-    validateEventUpdatable(event,param);
-
-    if (param.getStateAction() != null) {
-      State newState = StateAction.fromString(param.getStateAction()).getState();
-      event.setState(newState);
-      if (State.PUBLISHED.equals(newState)) {
-        event.setPublishedOn(LocalDateTime.now());
-      }
+    if (event.getState().equals(State.PUBLISHED)) {
+      throw new ConflictException("Событие " + event.getId() + " уже опубликовано");
+    }
+    if (event.getState().equals(State.CANCELED)) {
+      throw new ConflictException("Нельзя опубликовать отмененное событие");
     }
 
-    if (param.getAnnotation() != null) {
-      event.setAnnotation(param.getAnnotation());
-    }
+    EventMapper.updateEventFromAdminRequest(event, param, event.getCategory());
+    eventRepository.save(event);
 
-    if (param.getCategory() != null) {
-      Category category = CategoryMapper.toCategory(categoryService.getCategoryById(param.getCategory()));
-      event.setCategory(category);
-    }
-
-    if (param.getDescription() != null) {
-      event.setDescription(param.getDescription());
-    }
-
-    if (param.getEventDate() != null) {
-      event.setEventDate(param.getEventDate());
-    }
-
-    if (param.getLocation() != null) {
-      event.setLocation(param.getLocation());
-    }
-
-    if (param.getPaid() != null) {
-      event.setPaid(param.getPaid());
-    }
-
-    if (param.getParticipantLimit() != null) {
-      event.setParticipantLimit(param.getParticipantLimit());
-    }
-
-    if (param.getRequestModeration() != null) {
-      event.setRequestModeration(param.getRequestModeration());
-    }
-
-    if (param.getTitle() != null) {
-      event.setTitle(param.getTitle());
-    }
-
-    setViews(List.of(event));
-    setConfirmedRequests(List.of(event));
-
-    return EventMapper.toFullDto(eventRepository.save(event));
+    return EventMapper.toFullDto(event);
   }
 
   /**
@@ -162,18 +122,10 @@ public class EventServiceImpl implements EventService {
   public EventFullDto getEvent(final Long eventId) {
     log.debug("Fetching event ID={}.", eventId);
     Event event = eventRepository.findByIdAndState(eventId, State.PUBLISHED)
-        .orElseThrow(() -> new NotFoundException(
-            "Event with id " + eventId + " not found or not published"));
+            .orElseThrow(() -> new NotFoundException(
+                    "Event with id " + eventId + " not found or not published"));
 
-    if (!event.getState().equals(State.PUBLISHED)) {
-      throw new ConflictException("Нельзя участвовать в неопубликованном событии");
-    }
-
-//    if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-//        participationRequest.setStatus(StatusRequest.CONFIRMED);
-//    }
-
-    setConfirmedRequests(List.of(event));
+    requestController.getAllRequestse(List.of(EventMapper.toFullDto(event)));
     setViews(List.of(event));
     return EventMapper.toFullDto(event);
   }
@@ -207,7 +159,7 @@ public class EventServiceImpl implements EventService {
     //validateUserExist(initiatorId);
     final PageRequest page = PageRequest.of(from / size, size);
     final List<Event> events = eventRepository.findAllByInitiatorId(initiatorId, page).getContent();
-    setConfirmedRequests(events);
+    requestController.getAllRequestse(List.of(EventMapper.toFullDto((Event) events)));
     setViews(events);
     return EventMapper.toShortDto(events);
   }
@@ -351,29 +303,29 @@ public class EventServiceImpl implements EventService {
     return String.format("/events/%d", eventId);
   }
 
-  private void setConfirmedRequests(final List<Event> events) {
-    log.debug("Setting confirmed requests to the events list {}.", events);
-
-    if (events.isEmpty()) {
-      log.debug("Events list is empty.");
-      return;
-    }
-
-    final List<Long> eventIds = events.stream().map(Event::getId).toList();
-
-    List<ParticipationRequestDto> allRequests = requestController.getAllRequest(eventIds);
-
-    final Map<Long, List<ParticipationRequestDto>> confirmedRequests = allRequests.stream()
-            .filter(request -> StatusRequest.valueOf(request.getStatus()).equals(StatusRequest.CONFIRMED))
-            .collect(Collectors.groupingBy(ParticipationRequestDto::getEventId));
-
-    events.forEach(event ->
-            event.setConfirmedRequests(
-                    confirmedRequests.getOrDefault(event.getId(), List.of()).size())
-    );
-
-    log.debug("Confirmed requests have been set successfully to the events with IDs {}.", eventIds);
-  }
+//  private void setConfirmedRequests(final List<Event> events) {
+//    log.debug("Setting confirmed requests to the events list {}.", events);
+//
+//    if (events.isEmpty()) {
+//      log.debug("Events list is empty.");
+//      return;
+//    }
+//
+//    final List<Long> eventIds = events.stream().map(Event::getId).toList();
+//
+//    List<ParticipationRequestDto> allRequests = requestController.getAllRequests(eventIds); // ИСПРАВИТЬ
+//
+//    final Map<Long, List<ParticipationRequestDto>> confirmedRequests = allRequests.stream()
+//            .filter(request -> StatusRequest.valueOf(request.getStatus()).equals(StatusRequest.CONFIRMED))
+//            .collect(Collectors.groupingBy(ParticipationRequestDto::getEventId));
+//
+//    events.forEach(event ->
+//            event.setConfirmedRequests(
+//                    confirmedRequests.getOrDefault(event.getId(), List.of()).size())
+//    );
+//
+//    log.debug("Confirmed requests have been set successfully to the events with IDs {}.", eventIds);
+//  }
 
 
   private void patchEventFields(final Event target, final UpdateEventUserRequest dataSource) {

@@ -32,6 +32,7 @@ public class RequestServiceImpl implements RequestService {
   private final RequestRepository requestRepository;
   private final UserController userClient;
   private final EventController eventClient;
+  private RequestMapper requestMapper;
 
   @Override
 
@@ -43,14 +44,13 @@ public class RequestServiceImpl implements RequestService {
       throw new IllegalArgumentException("ID события должен быть больше 0");
     }
 
-    ResponseEntity<EventFullDto> eventResponse = eventClient.getEvent(userId, eventId);
-    EventFullDto event = eventResponse.getBody();
+    EventFullDto eventResponse = eventClient.getEventById(eventId);
 
-    if (event == null) {
+    if (eventResponse == null) {
       throw new NotFoundException("Событие не найдено");
     }
 
-    if (user.equals(event.getInitiator())) {
+    if (user.equals(eventResponse.getInitiator())) {
       throw new ConflictException("Нельзя подать заявку на участие в своём собственном событии");
     }
 
@@ -67,11 +67,11 @@ public class RequestServiceImpl implements RequestService {
 
     ParticipationRequest participationRequest = new ParticipationRequest(userId, eventId);
 
-    if (event.getParticipantLimit() != 0 && event.getParticipantLimit() <= confirmedRequests) {
+    if (eventResponse.getParticipantLimit() != 0 && eventResponse.getParticipantLimit() <= confirmedRequests) {
       throw new ConflictException("Достигнут лимит участников для этого события");
     }
 
-    if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
+    if (!eventResponse.getRequestModeration() || eventResponse.getParticipantLimit() == 0) {
       participationRequest.setStatus(StatusRequest.CONFIRMED);
     }
 
@@ -82,13 +82,13 @@ public class RequestServiceImpl implements RequestService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<ParticipationRequestDto> getAll(final List<Long> userId) {
+  public List<ParticipationRequestDto> getAll(final List<Long> eventIds) {
 //    userRepository.findById(userId)
 //        .orElseThrow(() -> new NotFoundException("Нету такого user"));
 
     //userClient.getUser(userId.getFirst());
 
-    return requestRepository.findAllByRequesterIn(userId)
+    return requestRepository.findAllByRequesterIn(eventIds)
         .stream()
         .map(RequestMapper::mapToDto)
         .toList();
@@ -115,6 +115,19 @@ public class RequestServiceImpl implements RequestService {
 
     return RequestMapper.mapToDto(participationRequest);
   }
+
+
+//  public List<ParticipationRequestDto> getAllRequestsByEventIds(List<Long> eventIds) {
+//    if (eventIds == null || eventIds.isEmpty()) {
+//      return List.of();
+//    }
+//
+//    List<ParticipationRequest> requests = requestRepository.findAllByEventIdIn(eventIds);
+//
+//    return requests.stream()
+//            .map(requestMapper::toParticipationRequestDto)
+//            .collect(Collectors.toList());
+//  }
 
 
 
@@ -181,7 +194,25 @@ public class RequestServiceImpl implements RequestService {
     return RequestMapper.toEventRequestStatusUpdateResult(confirmedRequests, rejectedRequests);
   } // третий
 
-  private void setConfirmedRequests(final List<EventFullDto> events) {
+  @Override
+  public List<ParticipationRequestDto> getConfirmedRequestsByEventIds(List<Long> eventIds) {
+    log.debug("Fetching confirmed participation requests for event IDs: {}", eventIds);
+
+    if (eventIds == null || eventIds.isEmpty()) {
+      log.debug("Event ID list is empty or null.");
+      return List.of();
+    }
+
+    List<ParticipationRequest> confirmedRequests = requestRepository
+            .findAllByEventInAndStatus(eventIds, StatusRequest.CONFIRMED);
+
+    return confirmedRequests.stream()
+            .map(RequestMapper::mapToDto)
+            .collect(Collectors.toList());
+  }
+
+  @Override
+  public void setConfirmedRequests(final List<EventFullDto> events) {
     log.debug("Setting Confirmed requests to the events list {}.", events);
     if (events.isEmpty()) {
       log.debug("Events list is empty.");
@@ -210,7 +241,7 @@ public class RequestServiceImpl implements RequestService {
             updateStatusDto.getRequestIds(), eventId, initiatorId, updateStatusDto.getStatus());
 
     //validateUserExist(initiatorId);
-    final EventFullDto event = eventClient.getEventById(eventId, null);
+    final EventFullDto event = eventClient.getEventById(eventId);
    //final EventFullDto event = fetchEvent(eventId, initiatorId);
     final StatusRequest newStatus = updateStatusDto.getStatus();
     final Boolean isModerated = event.getRequestModeration(); //
