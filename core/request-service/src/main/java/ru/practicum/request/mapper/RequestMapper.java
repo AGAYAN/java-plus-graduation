@@ -18,11 +18,15 @@ public class RequestMapper {
     log.debug("Mapping participationRequestDto {} to RequestDto.", participationRequest);
     Objects.requireNonNull(participationRequest);
     return new ParticipationRequestDto()
-        .setId(participationRequest.getId())
-        .setRequester(participationRequest.getRequester())
-        .setEventId(participationRequest.getEvent())
-        .setCreated(participationRequest.getCreated())
-        .setStatus(participationRequest.getStatus().name());
+            .setId(participationRequest.getId())
+            .setRequester(participationRequest.getRequester() != null
+                    ? participationRequest.getRequester()
+                    : null)
+            .setEvent(participationRequest.getEvent() != null
+                    ? participationRequest.getEvent()
+                    : null)
+            .setCreated(participationRequest.getCreated())
+            .setStatus(participationRequest.getStatus().name());
   }
 
   public List<ParticipationRequestDto> mapToDto(final List<ParticipationRequest> requests) {

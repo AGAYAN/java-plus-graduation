@@ -1,5 +1,6 @@
 package ru.practicum.compilation.service;
 
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -14,6 +15,7 @@ import ru.practicum.dto.compilation.CompilationParam;
 import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequest;
 import ru.practicum.event.model.Event;
+import ru.practicum.event.repository.EventRepository;
 import ru.practicum.event.service.EventService;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
@@ -32,25 +34,21 @@ public class CompilationServiceImpl implements CompilationService {
   private final CompilationRepository compilationRepository;
   private final EventService eventService;
   private final EventController eventController;
+  private final EventRepository eventRepository;
+  private CompilationMapper compilationMapper;
 
   /**
    * Saves new compilation; may contain NO events.
    */
   @Override
   public CompilationDto save(final NewCompilationDto compilationDto) {
-    log.debug("Saving new compilation with data {}.", compilationDto);
-    final Set<Event> events = compilationDto.getEvents() == null || compilationDto.getEvents().isEmpty()
-            ? Set.of()
-            : eventService.getEvents(compilationDto.getEvents());
-    final Compilation toSave = CompilationMapper.toCompilation(compilationDto, events);
-
-    try {
-      final Compilation savedCompilation = compilationRepository.save(toSave);
-      return CompilationMapper.toCompilationDto(fetchCompilation(savedCompilation.getId()));
-    } catch (ConstraintViolationException exception) {
-      log.warn("Could not execute statement. Title should be unique.");
-      throw new ConflictException("Could not execute statement. Title should be unique.");
+    if (compilationDto.getTitle() == null || compilationDto.getTitle().isBlank()) {
+      throw new ValidationException("Поле title не может быть пустой или состоять из пробела");
     }
+
+    return compilationMapper.toCompilationDto(compilationRepository
+            .save(compilationMapper.toCompilation(compilationDto,
+                    eventRepository.findAllByIdIn(compilationDto.getEvents()))));
   }
 
   /**

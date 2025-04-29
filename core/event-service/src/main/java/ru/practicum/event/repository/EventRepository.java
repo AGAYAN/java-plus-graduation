@@ -25,5 +25,9 @@ public interface EventRepository extends JpaRepository<Event, Long>, EventQueryR
   boolean existsByCategoryId(Long id);
 
   Set<Event> findAllDistinctByIdIn(Set<Long> eventIds);
+
+  Set<Event> findAllByIdIn(@Param("ids") Set<Long> ids);
+
+  boolean existsByTitle(String title);
 }
 

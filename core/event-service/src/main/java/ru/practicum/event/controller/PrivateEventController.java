@@ -1,5 +1,6 @@
 package ru.practicum.event.controller;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -25,9 +26,10 @@ public class PrivateEventController {
   private final EventService eventService;
 
   @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<EventFullDto> addEvent(
-      @PathVariable("userId") @NotNull @Positive Long userId,
-      @Validated @RequestBody NewEventDto eventDto) {
+          @PathVariable("userId") @NotNull @Positive Long userId,
+          @RequestBody @Valid NewEventDto eventDto) {
     log.info("Request received POST /users/{}/events to add event {}", userId, eventDto);
     final EventFullDto eventSaved = eventService.addEvent(userId, eventDto);
     log.info("Event added successfully with ID={}.", eventSaved.getId());

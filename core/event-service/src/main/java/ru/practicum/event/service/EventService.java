@@ -1,6 +1,7 @@
 package ru.practicum.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.event.model.Event;
@@ -50,7 +51,6 @@ public interface EventService {
    * Retrieving published events with filtering options.
    */
   List<EventShortDto> getEvents(GetEventPublicParam param, HttpServletRequest request);
-
   /**
    *  Retrieves a set of events based on the provided event IDs.
    */

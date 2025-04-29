@@ -13,8 +13,8 @@ import java.util.List;
 public interface RequestController {
 
    @GetMapping("/request")
-   List<ParticipationRequestDto> getAllRequests(@RequestParam("eventIds") List<Long> eventIds);
+   List<ParticipationRequestDto> getAllRequests(@RequestParam List<Long> eventIds);
 
-   @GetMapping("/request")
+   @GetMapping("/request/full")
    void getAllRequestse(@RequestParam List<EventFullDto> eventIds);
 }

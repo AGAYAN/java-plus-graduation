@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.Set;
 import lombok.Data;
+import ru.practicum.dto.event.EventShortDto;
 
 /**
  * Is used in the ADMIN API - as REQUEST body

@@ -4,11 +4,14 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsDto;
 
 import ru.practicum.category.model.Category;
+import ru.practicum.controller.RequestController;
+import ru.practicum.controller.UserController;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
@@ -18,7 +21,9 @@ import ru.practicum.dto.request.StatusRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.event.enums.State;
+import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
+
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,7 +33,16 @@ import java.util.stream.Collectors;
 public class EventQueryRepositoryImpl implements EventQueryRepository {
 
     private final EntityManager entityManager;
+    private UserController userController;
     private final StatsClient statsClient;
+    private RequestController requestController;
+
+    @Autowired
+    public EventQueryRepositoryImpl(EntityManager entityManager, RequestController requestController, StatsClient statsClient) {
+        this.requestController = requestController;
+        this.entityManager = entityManager;
+        this.statsClient = statsClient;
+    }
 
     public EventQueryRepositoryImpl(final EntityManager entityManager, StatsClient statsClient) {
         this.entityManager = entityManager;
@@ -46,11 +60,10 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = cb.createTupleQuery();
-        Root<EventFullDto> eventTable = query.from(EventFullDto.class);
+        Root<Event> eventTable = query.from(Event.class);
 
-        Join<EventFullDto, Category> categoryJoin = eventTable.join("category");
-        Join<EventFullDto, UserDto> initiatorJoin = eventTable.join("initiator");
-        Join<EventFullDto, Location> locationJoin = eventTable.join("location");
+        Join<Event, Category> categoryJoin = eventTable.join("category");
+
 
         query.multiselect(
                 eventTable.get("annotation").alias("annotation"),
@@ -58,8 +71,7 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
                 categoryJoin.get("name").alias("categoryName"),
                 eventTable.get("eventDate").alias("eventDate"),
                 eventTable.get("id").alias("eventId"),
-                initiatorJoin.get("id").alias("initiatorId"),
-                initiatorJoin.get("name").alias("initiatorName"),
+                eventTable.get("initiatorId").alias("initiatorId"),
                 eventTable.get("paid").alias("paid"),
                 eventTable.get("title").alias("title"),
                 eventTable.get("description").alias("description"),
@@ -67,15 +79,15 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
                 eventTable.get("publishedOn").alias("publishedOn"),
                 eventTable.get("participantLimit").alias("participantLimit"),
                 eventTable.get("state").alias("state"),
-                locationJoin.get("lat").alias("lat"),
-                locationJoin.get("lon").alias("lon"),
+                eventTable.get("location").get("lat").alias("lat"),
+                eventTable.get("location").get("lon").alias("lon"),
                 eventTable.get("requestModeration").alias("requestModeration")
         );
 
         Predicate predicate = cb.conjunction();
 
         if (users != null && !users.isEmpty()) {
-            predicate = cb.and(predicate, initiatorJoin.get("id").in(users));
+            predicate = cb.and(predicate, eventTable.get("initiatorId").in(users));
         }
 
         if (states != null && !states.isEmpty()) {
@@ -121,10 +133,10 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = cb.createTupleQuery();
-        Root<EventFullDto> eventTable = query.from(EventFullDto.class);
+        Root<Event> eventTable = query.from(Event.class);
 
         Join<EventFullDto, Category> categoryJoin = eventTable.join("category");
-        Join<EventFullDto, UserDto> initiatorJoin = eventTable.join("initiator");
+
 
         query.multiselect(
                 eventTable.get("annotation").alias("annotation"),
@@ -132,8 +144,7 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
                 categoryJoin.get("name").alias("categoryName"),
                 eventTable.get("eventDate").alias("eventDate"),
                 eventTable.get("id").alias("eventId"),
-                initiatorJoin.get("id").alias("initiatorId"),
-                initiatorJoin.get("name").alias("initiatorName"),
+                eventTable.get("initiatorId").alias("initiatorId"),
                 eventTable.get("paid").alias("paid"),
                 eventTable.get("title").alias("title")
         );
@@ -246,83 +257,94 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
     }
 
     private Map<Long, Long> getConfirmedRequests(List<Long> eventIds) {
-        if (eventIds.isEmpty()) {
+        if (eventIds == null || eventIds.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Tuple> countQuery = cb.createTupleQuery();
-        Root<ParticipationRequestDto> requestTable = countQuery.from(ParticipationRequestDto.class);
+        List<ParticipationRequestDto> requestDtos = requestController.getAllRequests(eventIds);
 
-        countQuery.multiselect(
-                requestTable.get("event").get("id"),
-                cb.count(requestTable).alias("confirmedCount")
-        );
-        countQuery.where(
-                requestTable.get("event").get("id").in(eventIds),
-                cb.equal(requestTable.get("status"), StatusRequest.CONFIRMED)
-        );
-        countQuery.groupBy(requestTable.get("event").get("id"));
-
-        List<Tuple> results = entityManager.createQuery(countQuery).getResultList();
-
-        return results.stream()
-                .collect(Collectors.toMap(
-                        tuple -> tuple.get(0, Long.class),
-                        tuple -> tuple.get(1, Long.class)
+        return requestDtos.stream()
+                .filter(request -> StatusRequest.CONFIRMED.name().equals(request.getStatus()))
+                .collect(Collectors.groupingBy(
+                        ParticipationRequestDto::getEvent,
+                        Collectors.counting()
                 ));
     }
 
     private List<EventFullDto> mapToEventFullDtos(List<Tuple> tuples) {
         return tuples.stream().map(tuple -> {
-            String state = Optional.ofNullable(tuple.get("state", State.class)).map(State::name).orElse("");
+            String state = Optional.ofNullable(tuple.get("state", State.class))
+                    .map(State::name)
+                    .orElse("");
 
-            UserDto initiator = new UserDto();
-            initiator.setId(tuple.get("initiatorId", Long.class));
-            initiator.setName(tuple.get("initiatorName", String.class));
+            Long initiatorId = tuple.get("initiatorId", Long.class);
+            UserDto initiator;
+
+            try {
+                initiator = userController.getUser(initiatorId);
+            } catch (Exception e) {
+                initiator = new UserDto();
+                initiator.setId(initiatorId);
+                initiator.setName("Неизвестный пользователь");
+            }
 
             return new EventFullDto(
-                tuple.get("annotation", String.class),
-                new CategoryDto(tuple.get("categoryId", Long.class), tuple.get("categoryName", String.class)),
-                0,
-                tuple.get("createdOn", LocalDateTime.class),
-                Optional.ofNullable(tuple.get("description", String.class)).orElse(""),
-                tuple.get("eventDate", LocalDateTime.class),
-                tuple.get("eventId", Long.class),
+                    tuple.get("annotation", String.class),
+                    new CategoryDto(
+                            tuple.get("categoryId", Long.class),
+                            tuple.get("categoryName", String.class)
+                    ),
+                    0,
+                    tuple.get("createdOn", LocalDateTime.class),
+                    Optional.ofNullable(tuple.get("description", String.class)).orElse(""),
+                    tuple.get("eventDate", LocalDateTime.class),
+                    tuple.get("eventId", Long.class),
                     initiator,
-                new Location(tuple.get("lat", Float.class), tuple.get("lon", Float.class)),
-                tuple.get("paid", Boolean.class),
-                tuple.get("participantLimit", Integer.class),
-                tuple.get("publishedOn", LocalDateTime.class),
-                tuple.get("requestModeration", Boolean.class),
-                state,
-                tuple.get("title", String.class)
+                    new Location(
+                            tuple.get("lat", Float.class),
+                            tuple.get("lon", Float.class)
+                    ),
+                    tuple.get("paid", Boolean.class),
+                    tuple.get("participantLimit", Integer.class),
+                    tuple.get("publishedOn", LocalDateTime.class),
+                    tuple.get("requestModeration", Boolean.class),
+                    state,
+                    tuple.get("title", String.class)
             );
         }).collect(Collectors.toList());
     }
 
     private List<EventShortDto> mapToEventShortDtos(List<Tuple> tuples) {
         return tuples.stream()
-            .map(tuple -> new EventShortDto(
-                tuple.get("annotation", String.class),
-                new CategoryDto(
-                    tuple.get("categoryId", Long.class),
-                    tuple.get("categoryName", String.class)
-                ),
-                tuple.get("eventDate", LocalDateTime.class),
-                tuple.get("eventId", Long.class),
-                    new UserShortDto(
-                        tuple.get("initiatorId", Long.class),
-                        tuple.get("initiatorName", String.class)
-                    ).getId(),
-                tuple.get("paid", Boolean.class),
-                tuple.get("title", String.class)
-            ))
-            .collect(Collectors.toList());
+                .map(tuple -> {
+                    Long initiatorId = tuple.get("initiatorId", Long.class);
+                    UserDto initiator;
+
+                    try {
+                        initiator = userController.getUser(initiatorId);
+                    } catch (Exception e) {
+                        initiator = new UserDto();
+                        initiator.setId(initiatorId);
+                        initiator.setName("Неизвестный пользователь");
+                    }
+
+                    return new EventShortDto(
+                            tuple.get("annotation", String.class),
+                            new CategoryDto(
+                                    tuple.get("categoryId", Long.class),
+                                    tuple.get("categoryName", String.class)
+                            ),
+                            tuple.get("eventDate", LocalDateTime.class),
+                            tuple.get("eventId", Long.class),
+                            new UserShortDto(
+                                    initiator.getId(),
+                                    initiator.getName()
+                            ).getId(),
+                            tuple.get("paid", Boolean.class),
+                            tuple.get("title", String.class)
+                    );
+                })
+                .collect(Collectors.toList());
     }
-
-
-
-
 
 }

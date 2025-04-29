@@ -1,6 +1,6 @@
 package ru.practicum.request.service;
 
-import jakarta.ws.rs.NotFoundException;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +11,11 @@ import ru.practicum.controller.UserController;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.event.EventRequestStatusUpdateResult;
+import ru.practicum.dto.event.enums.State;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.request.StatusRequest;
 import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.request.repository.RequestRepository;
@@ -32,10 +34,8 @@ public class RequestServiceImpl implements RequestService {
   private final RequestRepository requestRepository;
   private final UserController userClient;
   private final EventController eventClient;
-  private RequestMapper requestMapper;
 
   @Override
-
   @Transactional
   public ParticipationRequestDto addRequest(final Long userId, final Long eventId) {
     Long user = userClient.getUser(userId).getId();
@@ -44,7 +44,14 @@ public class RequestServiceImpl implements RequestService {
       throw new IllegalArgumentException("ID события должен быть больше 0");
     }
 
-    EventFullDto eventResponse = eventClient.getEventById(eventId);
+    EventFullDto eventResponse;
+    try {
+      eventResponse = eventClient.getEventById(eventId);
+    } catch (FeignException.NotFound e) {
+      throw new ConflictException("Событие с id " + eventId + " не найдено");
+    } catch (FeignException e) {
+      throw new ConflictException("Ошибка обращения к event-service: " + e.getMessage());
+    }
 
     if (eventResponse == null) {
       throw new NotFoundException("Событие не найдено");
@@ -134,12 +141,29 @@ public class RequestServiceImpl implements RequestService {
   @Transactional(readOnly = true)
   @Override
   public List<ParticipationRequestDto> getRequests(final Long initiatorId, final Long eventId) {
-    log.debug("Retrieving event participants for event ID={}, posted by user ID={}.", eventId,
-            initiatorId);
-    //validateUserExist(initiatorId, eventId);
-    return RequestMapper.mapToDto(
-            requestRepository.findAllByEventAndRequester(eventId, initiatorId));
-  } // первый
+    log.debug("Retrieving event participants for event ID={}, posted by user ID={}.", eventId, initiatorId);
+
+
+    EventFullDto event = eventClient.getEventById(eventId);
+
+    if (event == null) {
+      throw new ConflictException("Событие не найдено");
+    }
+
+    if (event.getInitiator() == null) {
+      throw new ConflictException("Инициатор события не найден");
+    }
+
+    Long eventInitiatorId = event.getInitiator().getId();
+
+    if (!eventInitiatorId.equals(initiatorId)) {
+      throw new ConflictException("Пользователь не является инициатором события");
+    }
+
+    // Возвращаем все заявки на это событие
+    List<ParticipationRequest> requests = requestRepository.findAllByEvent(eventId);
+    return RequestMapper.mapToDto(requests);
+  }
 
   private EventRequestStatusUpdateResult autoConfirmRequests(final List<Long> requestIds,
                                                              final Long eventId) {

@@ -1,9 +1,11 @@
 package ru.practicum.event.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.EndPointHitDto;
@@ -11,7 +13,9 @@ import ru.practicum.StatsClient;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.GetEventPublicParam;
+import ru.practicum.dto.event.PublicEventParam;
 import ru.practicum.dto.event.enums.SortType;
+import ru.practicum.event.model.Event;
 import ru.practicum.event.service.EventService;
 
 import java.time.LocalDateTime;
@@ -27,7 +31,7 @@ public class PublicEventController {
     private final StatsClient statsClient;
 
     @GetMapping
-    public List<EventShortDto> getEvents(@RequestParam(value = "text", required = false) String text,
+    public List<EventShortDto > getEvents(@RequestParam(value = "text", required = false) String text,
                                          @RequestParam(value = "categories", required = false) List<Long> categories,
                                          @RequestParam(value = "paid", required = false) Boolean paid,
                                          @RequestParam(value = "rangeStart", required = false)
@@ -57,6 +61,7 @@ public class PublicEventController {
         saveHitStatistic(request);
         return events;
     }
+
 
     @GetMapping("/{eventId}")
     public EventFullDto getEventById(@PathVariable Long eventId, HttpServletRequest request) {

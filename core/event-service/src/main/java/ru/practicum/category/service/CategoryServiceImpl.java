@@ -28,6 +28,7 @@ public class CategoryServiceImpl implements CategoryService {
 
   private final CategoryRepository repository;
   private final EventRepository eventRepository;
+  private final CategoryRepository categoryRepository;
 
   /**
    * Adding new category to the DB by Admin
@@ -51,15 +52,8 @@ public class CategoryServiceImpl implements CategoryService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<CategoryDto> getCategory(int from, int size) {
-
-    Pageable pageable = PageRequest.of(from / size, size);
-
-    log.info("Get all categories with pagination from={}, size={}", from, size);
-
-    Page<Category> categoryPage = repository.findAll(pageable);
-
-    return CategoryMapper.toCategoryDtoList(categoryPage.getContent());
+  public List<CategoryDto> findAllBy(Pageable pageRequest) {
+    return categoryRepository.findAll(pageRequest).map(CategoryMapper::toCategoryDto).getContent();
   }
 
   /**

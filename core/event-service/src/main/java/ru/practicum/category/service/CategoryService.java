@@ -2,6 +2,7 @@ package ru.practicum.category.service;
 
 
 
+import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryDto;
 
@@ -11,7 +12,7 @@ public interface CategoryService {
 
     CategoryDto addCategory(NewCategoryDto dto);
 
-    List<CategoryDto> getCategory(int from, int size);
+    List<CategoryDto> findAllBy(Pageable pageRequest);
 
     CategoryDto getCategoryById(Long id);
 

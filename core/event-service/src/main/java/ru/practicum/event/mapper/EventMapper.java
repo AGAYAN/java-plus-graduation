@@ -22,6 +22,21 @@ import java.util.Objects;
 @Slf4j
 public class EventMapper {
 
+  public static Event toEvent(NewEventDto dto, Long initiatorId, CategoryDto categoryDto) {
+    return new Event()
+            .setAnnotation(dto.getAnnotation())
+            .setCategory(CategoryMapper.toCategory(categoryDto))
+            .setDescription(dto.getDescription())
+            .setEventDate(dto.getEventDate())
+            .setLocation(dto.getLocation())
+            .setPaid(dto.getPaid())
+            .setInitiatorId(initiatorId)
+            .setParticipantLimit(dto.getParticipantLimit())
+            .setTitle(dto.getTitle())
+            .setRequestModeration(dto.getRequestModeration())
+            .setState(State.PENDING);
+  }
+
   public static Event toEvent(final NewEventDto eventDto, final UserDto initiator, final CategoryDto category) {
     log.debug("Mapping NewEventDto {} to the Event.", eventDto);
     Objects.requireNonNull(eventDto);
@@ -64,19 +79,27 @@ public class EventMapper {
         .setState(event.getState().name());
   }
 
+
   public static EventShortDto toShortDto(final Event event) {
     log.debug("Mapping Event {} to the EventShortDto.", event);
     Objects.requireNonNull(event);
+
+    Long initiatorId = null;
+    if (event.getInitiator() != null) {
+      initiatorId = event.getInitiator().getId();
+    }
+
     return new EventShortDto(
-        event.getAnnotation(),
-        CategoryMapper.toCategoryDto(event.getCategory()),
-        event.getConfirmedRequests(),
-        event.getEventDate(),
-        event.getId(),
-            event.getInitiator().getId(),
-        event.getPaid(),
-        event.getTitle(),
-        event.getViews());
+            event.getAnnotation(),
+            CategoryMapper.toCategoryDto(event.getCategory()),
+            event.getConfirmedRequests(),
+            event.getEventDate(),
+            event.getId(),
+            initiatorId,
+            event.getPaid(),
+            event.getTitle(),
+            event.getViews()
+    );
   }
 
   public static List<EventShortDto> toShortDto(final List<Event> events) {
@@ -128,7 +151,6 @@ public class EventMapper {
 
     return event;
   }
-
 
 //  public static EventRequestStatusUpdateResult toEventRequestStatusUpdateResult(
 //          final List<ParticipationRequest> confirmedRequests, final List<ParticipationRequest> rejectedRequests) {

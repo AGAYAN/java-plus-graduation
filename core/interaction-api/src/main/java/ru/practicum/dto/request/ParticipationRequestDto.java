@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
  * PATCH /users/{userId}/events/{eventId}/requests
  *
  */
+
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,7 +31,7 @@ import java.time.LocalDateTime;
 public class ParticipationRequestDto {
 
   private Long id;
-  private Long eventId;
+  private Long event;
   private Long requester;
   private String status;
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

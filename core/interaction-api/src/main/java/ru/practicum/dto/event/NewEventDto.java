@@ -3,6 +3,7 @@ package ru.practicum.dto.event;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import ru.practicum.dto.validation.MinimumHoursFromNow;
 
 import java.time.LocalDateTime;
 
@@ -25,7 +26,7 @@ public class NewEventDto {
   @Size(min = 20, max = 7000, message = "Description must be between 20 and 7000 characters.")
   private String description;
 
-  //@MinimumHoursFromNow(hoursInFuture = 2, message = "Event date must be at least two hours in the future.") исправить
+  @MinimumHoursFromNow(hoursInFuture = 2, message = "Event date must be at least two hours in the future.")
   @NotNull(message = "Event date is required.")
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private LocalDateTime eventDate;

@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class CategoryDto {
+public class CategoryDto extends NewCategoryDto {
 
     @NotBlank
     @NotNull

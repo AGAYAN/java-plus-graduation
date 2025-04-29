@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import ru.practicum.category.service.CategoryService;
@@ -20,10 +22,9 @@ public class PublicCategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public List<CategoryDto> getCategories(@PositiveOrZero @RequestParam(defaultValue = "0", required = false) int from,
-                                           @Positive @RequestParam(defaultValue = "10", required = false) int size) {
-        log.info("Request to get categories with pagination from={}, size={}", from, size);
-        return categoryService.getCategory(from, size);
+    public List<CategoryDto> findAllBy(@RequestParam(defaultValue = "0") int from,
+                                       @RequestParam(defaultValue = "10") int size) {
+        return categoryService.findAllBy(PageRequest.of(from, size, Sort.by("id").descending()));
     }
 
     @GetMapping("/{id}")

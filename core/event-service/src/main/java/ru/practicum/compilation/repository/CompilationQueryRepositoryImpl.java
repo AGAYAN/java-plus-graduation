@@ -32,6 +32,11 @@ public class CompilationQueryRepositoryImpl implements CompilationQueryRepositor
     Root<Compilation> compilationTable = query.from(Compilation.class);
     compilationTable.fetch("events", JoinType.LEFT);
 
+    query.select(compilationTable).distinct(true);
+
+    log.debug("Fetching compilations with pinned={}, from={}, size={}",
+            param.getPinned(), param.getFrom(), param.getSize());
+
     if (param.getPinned() != null) {
       query.where(cb.equal(compilationTable.get("pinned"), param.getPinned()));
     }

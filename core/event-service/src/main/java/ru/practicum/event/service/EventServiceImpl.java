@@ -1,12 +1,17 @@
 package ru.practicum.event.service;
 
+import com.fasterxml.jackson.databind.util.ArrayBuilders;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsDto;
 
@@ -28,14 +33,17 @@ import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.exception.AlreadyExistsException;
 import ru.practicum.exception.BadRequestException;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 //import ru.practicum.request.mapper.RequestMapper;
 
+import javax.xml.stream.EventFilter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Transactional
@@ -58,7 +66,7 @@ public class EventServiceImpl implements EventService {
   @Override
   public EventFullDto addEvent(final Long initiatorId, final NewEventDto eventDto) {
     log.debug("Persisting a new event with data: {} posted by user with ID={}.", eventDto,
-        initiatorId);
+            initiatorId);
 
     final UserDto initiator = userController.getUser(initiatorId);
     final CategoryDto category = categoryService.getCategoryById(eventDto.getCategory());
@@ -125,7 +133,7 @@ public class EventServiceImpl implements EventService {
             .orElseThrow(() -> new NotFoundException(
                     "Event with id " + eventId + " not found or not published"));
 
-    requestController.getAllRequestse(List.of(EventMapper.toFullDto(event)));
+    requestController.getAllRequests(List.of(eventId));
     setViews(List.of(event));
     return EventMapper.toFullDto(event);
   }
@@ -137,15 +145,38 @@ public class EventServiceImpl implements EventService {
   @Override
   public List<EventFullDto> getEvents(GetEventAdminRequest param) {
     log.info("Received request GET /admin/events with param {}", param);
-    return eventRepository.adminFindEvents(
-        param.getUsers(),
-        param.getStates(),
-        param.getCategories(),
-        param.getRangeStart(),
-        param.getRangeEnd(),
-        param.getFrom(),
-        param.getSize()
+
+    List<EventFullDto> events = eventRepository.adminFindEvents(
+            param.getUsers(),
+            param.getStates(),
+            param.getCategories(),
+            param.getRangeStart(),
+            param.getRangeEnd(),
+            param.getFrom(),
+            param.getSize()
     );
+
+
+    List<Long> initiatorIds = events.stream()
+            .map(event -> {
+              UserDto initiator = event.getInitiator();
+              return initiator != null ? initiator.getId() : null;
+            })
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(Collectors.toList());
+
+    Map<Long, UserDto> usersMap = initiatorIds.stream()
+            .map(id -> Map.entry(id, userController.getUser(id)))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    events.forEach(event -> {
+      Long initiatorId = event.getInitiator().getId();
+      UserDto user = usersMap.get(initiatorId);
+      event.setInitiator(user);
+    });
+
+    return events;
   }
 
   /**
@@ -155,11 +186,17 @@ public class EventServiceImpl implements EventService {
   @Override
   public List<EventShortDto> getEvents(final Long initiatorId, final Integer from,
                                        final Integer size) {
-    log.debug("Fetching events posted by user with ID={}.", initiatorId);
-    //validateUserExist(initiatorId);
     final PageRequest page = PageRequest.of(from / size, size);
     final List<Event> events = eventRepository.findAllByInitiatorId(initiatorId, page).getContent();
-    requestController.getAllRequestse(List.of(EventMapper.toFullDto((Event) events)));
+
+    // Получаем список id событий
+    List<Long> eventIds = events.stream()
+            .map(Event::getId)
+            .toList();
+
+    // Получаем заявки на участие
+    requestController.getAllRequests(eventIds);
+
     setViews(events);
     return EventMapper.toShortDto(events);
   }
@@ -172,19 +209,19 @@ public class EventServiceImpl implements EventService {
   public List<EventShortDto> getEvents(GetEventPublicParam param, HttpServletRequest request) {
     log.debug("Fetching events with params {}", param);
     if (param.getRangeStart() != null && param.getRangeEnd() != null &&
-        param.getRangeStart().isAfter(param.getRangeEnd())) {
+            param.getRangeStart().isAfter(param.getRangeEnd())) {
       throw new BadRequestException("Start date should be before end date");
     }
     return eventRepository.publicGetEvents(
-        param.getText(),
-        param.getCategories(),
-        param.getPaid(),
-        param.getRangeStart(),
-        param.getRangeEnd(),
-        param.getOnlyAvailable(),
-        param.getSort(),
-        param.getFrom(),
-        param.getSize());
+            param.getText(),
+            param.getCategories(),
+            param.getPaid(),
+            param.getRangeStart(),
+            param.getRangeEnd(),
+            param.getOnlyAvailable(),
+            param.getSort(),
+            param.getFrom(),
+            param.getSize());
   }
 
   /**
@@ -197,7 +234,6 @@ public class EventServiceImpl implements EventService {
     Objects.requireNonNull(eventIds);
     return eventIds.isEmpty() ? Set.of() : eventRepository.findAllDistinctByIdIn(eventIds);
   }
-
 
   /**
    * Retrieves information about participation requests for the current user's event.
@@ -303,29 +339,29 @@ public class EventServiceImpl implements EventService {
     return String.format("/events/%d", eventId);
   }
 
-//  private void setConfirmedRequests(final List<Event> events) {
-//    log.debug("Setting confirmed requests to the events list {}.", events);
-//
-//    if (events.isEmpty()) {
-//      log.debug("Events list is empty.");
-//      return;
-//    }
-//
-//    final List<Long> eventIds = events.stream().map(Event::getId).toList();
-//
-//    List<ParticipationRequestDto> allRequests = requestController.getAllRequests(eventIds); // ИСПРАВИТЬ
-//
-//    final Map<Long, List<ParticipationRequestDto>> confirmedRequests = allRequests.stream()
-//            .filter(request -> StatusRequest.valueOf(request.getStatus()).equals(StatusRequest.CONFIRMED))
-//            .collect(Collectors.groupingBy(ParticipationRequestDto::getEventId));
-//
-//    events.forEach(event ->
-//            event.setConfirmedRequests(
-//                    confirmedRequests.getOrDefault(event.getId(), List.of()).size())
-//    );
-//
-//    log.debug("Confirmed requests have been set successfully to the events with IDs {}.", eventIds);
-//  }
+  private void setConfirmedRequests(final List<Event> events) {
+    log.debug("Setting confirmed requests to the events list {}.", events);
+
+    if (events.isEmpty()) {
+      log.debug("Events list is empty.");
+      return;
+    }
+
+    final List<Long> eventIds = events.stream().map(Event::getId).toList();
+
+    List<ParticipationRequestDto> allRequests = requestController.getAllRequests(eventIds); // ИСПРАВИТЬ
+
+    final Map<Long, List<ParticipationRequestDto>> confirmedRequests = allRequests.stream()
+            .filter(request -> StatusRequest.valueOf(request.getStatus()).equals(StatusRequest.CONFIRMED))
+            .collect(Collectors.groupingBy(ParticipationRequestDto::getEvent));
+
+    events.forEach(event ->
+            event.setConfirmedRequests(
+                    confirmedRequests.getOrDefault(event.getId(), List.of()).size())
+    );
+
+    log.debug("Confirmed requests have been set successfully to the events with IDs {}.", eventIds);
+  }
 
 
   private void patchEventFields(final Event target, final UpdateEventUserRequest dataSource) {

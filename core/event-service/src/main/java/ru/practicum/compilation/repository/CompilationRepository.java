@@ -11,11 +11,11 @@ import java.util.Optional;
 public interface CompilationRepository extends JpaRepository<Compilation, Long>,
     CompilationQueryRepository {
 
-  @EntityGraph(attributePaths = {"events", "events.category", "events.initiator"})
+  @EntityGraph(attributePaths = {"events", "events.category"})
   @Query("""
-      SELECT c
-      FROM Compilation c
-      WHERE c.id = :id
-      """)
+    SELECT c
+    FROM Compilation c
+    WHERE c.id = :id
+    """)
   Optional<Compilation> findByIdEnriched(@Param("id") Long compId);
 }

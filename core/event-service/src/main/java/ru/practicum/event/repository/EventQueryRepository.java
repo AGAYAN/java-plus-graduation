@@ -19,14 +19,14 @@ public interface EventQueryRepository {
                                      int size);
 
   List<EventShortDto> publicGetEvents(final String text,
-                                      final List<Long> categories,
-                                      final Boolean paid,
-                                      final LocalDateTime rangeStart,
-                                      final LocalDateTime rangeEnd,
-                                      final Boolean onlyAvailable,
-                                      final SortType sort,
-                                      final int from,
-                                      final int size
+                              final List<Long> categories,
+                              final Boolean paid,
+                              final LocalDateTime rangeStart,
+                              final LocalDateTime rangeEnd,
+                              final Boolean onlyAvailable,
+                              final SortType sort,
+                              final int from,
+                              final int size
                                               );
 
 }
