@@ -57,15 +57,21 @@ public class RequestServiceImpl implements RequestService {
       throw new NotFoundException("Событие не найдено");
     }
 
-    if (user.equals(eventResponse.getInitiator())) {
+    log.info("Получено событие: {}", eventResponse);
+
+    if (eventResponse.getInitiator() == null || eventResponse.getInitiator().getId() == null) {
+      throw new ConflictException("У события отсутствует инициатор");
+    }
+    if (userId.equals(eventResponse.getInitiator().getId())) {
       throw new ConflictException("Нельзя подать заявку на участие в своём собственном событии");
     }
 
-//    if (!event.getState().equals(State.PUBLISHED)) {
+//    if (!eventResponse.getState().equals("PUBLISHED")) {
 //      throw new ConflictException("Нельзя участвовать в неопубликованном событии");
 //    }
 
     ParticipationRequest existingRequest = requestRepository.findByRequesterAndEvent(userId, eventId);
+
     if (existingRequest != null && !StatusRequest.CANCELED.equals(existingRequest.getStatus())) {
       throw new ConflictException("Вы уже отправили заявку на участие в этом событии");
     }
@@ -86,6 +92,7 @@ public class RequestServiceImpl implements RequestService {
 
     return RequestMapper.mapToDto(savedRequest);
   }
+
 
   @Override
   @Transactional(readOnly = true)
