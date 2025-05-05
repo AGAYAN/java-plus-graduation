@@ -66,9 +66,9 @@ public class RequestServiceImpl implements RequestService {
       throw new ConflictException("Нельзя подать заявку на участие в своём собственном событии");
     }
 
-//    if (!eventResponse.getState().equals("PUBLISHED")) {
-//      throw new ConflictException("Нельзя участвовать в неопубликованном событии");
-//    }
+    if (!eventResponse.getState().equals("PUBLISHED")) {
+      throw new ConflictException("Нельзя участвовать в неопубликованном событии");
+    }
 
     ParticipationRequest existingRequest = requestRepository.findByRequesterAndEvent(userId, eventId);
 
