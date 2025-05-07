@@ -1,6 +1,5 @@
 package ru.practicum.event.repository;
 
-
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.enums.SortType;

@@ -14,7 +14,6 @@ import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.CompilationParam;
 import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequest;
-import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.event.service.EventService;
 import ru.practicum.exception.ConflictException;
@@ -23,7 +22,6 @@ import ru.practicum.exception.NotFoundException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @Transactional
@@ -33,9 +31,7 @@ public class CompilationServiceImpl implements CompilationService {
 
   private final CompilationRepository compilationRepository;
   private final EventService eventService;
-  private final EventController eventController;
   private final EventRepository eventRepository;
-  private CompilationMapper compilationMapper;
 
   /**
    * Saves new compilation; may contain NO events.
@@ -46,8 +42,8 @@ public class CompilationServiceImpl implements CompilationService {
       throw new ValidationException("Поле title не может быть пустой или состоять из пробела");
     }
 
-    return compilationMapper.toCompilationDto(compilationRepository
-            .save(compilationMapper.toCompilation(compilationDto,
+    return CompilationMapper.toCompilationDto(compilationRepository
+            .save(CompilationMapper.toCompilation(compilationDto,
                     eventRepository.findAllByIdIn(compilationDto.getEvents()))));
   }
 

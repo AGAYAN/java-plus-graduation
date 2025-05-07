@@ -22,21 +22,6 @@ import java.util.Objects;
 @Slf4j
 public class EventMapper {
 
-  public static Event toEvent(NewEventDto dto, Long initiatorId, CategoryDto categoryDto) {
-    return new Event()
-            .setAnnotation(dto.getAnnotation())
-            .setCategory(CategoryMapper.toCategory(categoryDto))
-            .setDescription(dto.getDescription())
-            .setEventDate(dto.getEventDate())
-            .setLocation(dto.getLocation())
-            .setPaid(dto.getPaid())
-            .setInitiatorId(initiatorId)
-            .setParticipantLimit(dto.getParticipantLimit())
-            .setTitle(dto.getTitle())
-            .setRequestModeration(dto.getRequestModeration())
-            .setState(State.PENDING);
-  }
-
   public static Event toEvent(final NewEventDto eventDto, final UserDto initiator, final CategoryDto category) {
     log.debug("Mapping NewEventDto {} to the Event.", eventDto);
     Objects.requireNonNull(eventDto);
@@ -140,7 +125,6 @@ public class EventMapper {
       event.setTitle(request.getTitle());
     }
 
-    // обработка действия с состоянием
     if (request.getStateAction() != null) {
       switch (request.getStateAction()) {
         case "PUBLISH_EVENT" -> event.setState(State.PUBLISHED);
@@ -152,11 +136,4 @@ public class EventMapper {
     return event;
   }
 
-//  public static EventRequestStatusUpdateResult toEventRequestStatusUpdateResult(
-//          final List<ParticipationRequest> confirmedRequests, final List<ParticipationRequest> rejectedRequests) {
-//    log.debug("Mapping parameters to the EventRequestStatusUpdateResult.");
-//    return new EventRequestStatusUpdateResult()
-//        .setConfirmedRequests(RequestMapper.mapToDto(confirmedRequests))
-//        .setRejectedRequests(RequestMapper.mapToDto(rejectedRequests));
-//  }
 }

@@ -2,8 +2,6 @@ package ru.practicum.category.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +14,6 @@ import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.AlreadyExistsException;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
-
 
 import java.util.List;
 

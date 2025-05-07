@@ -3,7 +3,6 @@ package ru.practicum.request.service;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.controller.EventController;
@@ -11,7 +10,6 @@ import ru.practicum.controller.UserController;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.event.EventRequestStatusUpdateResult;
-import ru.practicum.dto.event.enums.State;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.request.StatusRequest;
 import ru.practicum.exception.ConflictException;
@@ -38,7 +36,7 @@ public class RequestServiceImpl implements RequestService {
   @Override
   @Transactional
   public ParticipationRequestDto addRequest(final Long userId, final Long eventId) {
-    Long user = userClient.getUser(userId).getId();
+    userClient.getUser(userId).getId();
 
     if (eventId == null || eventId <= 0) {
       throw new IllegalArgumentException("ID события должен быть больше 0");
@@ -97,11 +95,6 @@ public class RequestServiceImpl implements RequestService {
   @Override
   @Transactional(readOnly = true)
   public List<ParticipationRequestDto> getAll(final List<Long> eventIds) {
-//    userRepository.findById(userId)
-//        .orElseThrow(() -> new NotFoundException("Нету такого user"));
-
-    //userClient.getUser(userId.getFirst());
-
     return requestRepository.findAllByRequesterIn(eventIds)
         .stream()
         .map(RequestMapper::mapToDto)
@@ -111,9 +104,6 @@ public class RequestServiceImpl implements RequestService {
   @Override
   @Transactional
   public ParticipationRequestDto cancel(final Long userId, final Long requestId) {
-//    userRepository.findById(userId)
-//        .orElseThrow(() -> new NotFoundException("Нету такого user"));
-
     userClient.getUser(userId);
 
     ParticipationRequest participationRequest = requestRepository.findById(requestId)
@@ -129,21 +119,6 @@ public class RequestServiceImpl implements RequestService {
 
     return RequestMapper.mapToDto(participationRequest);
   }
-
-
-//  public List<ParticipationRequestDto> getAllRequestsByEventIds(List<Long> eventIds) {
-//    if (eventIds == null || eventIds.isEmpty()) {
-//      return List.of();
-//    }
-//
-//    List<ParticipationRequest> requests = requestRepository.findAllByEventIdIn(eventIds);
-//
-//    return requests.stream()
-//            .map(requestMapper::toParticipationRequestDto)
-//            .collect(Collectors.toList());
-//  }
-
-
 
   @Transactional(readOnly = true)
   @Override
@@ -167,7 +142,6 @@ public class RequestServiceImpl implements RequestService {
       throw new ConflictException("Пользователь не является инициатором события");
     }
 
-    // Возвращаем все заявки на это событие
     List<ParticipationRequest> requests = requestRepository.findAllByEvent(eventId);
     return RequestMapper.mapToDto(requests);
   }
@@ -180,7 +154,7 @@ public class RequestServiceImpl implements RequestService {
     requestRepository.saveAll(requestsToUpdate);
 
     return RequestMapper.toEventRequestStatusUpdateResult(requestsToUpdate, Collections.emptyList());
-  } // второй
+  }
 
   private List<ParticipationRequest> getPendingRequests(final List<Long> requestIds,
                                                         final Long eventId) {
@@ -194,7 +168,6 @@ public class RequestServiceImpl implements RequestService {
     }
     return requests;
   }
-
 
   private EventRequestStatusUpdateResult processRequestsWithLimit(
           final List<ParticipationRequest> requestsToUpdate,
@@ -223,7 +196,7 @@ public class RequestServiceImpl implements RequestService {
     requestRepository.saveAll(confirmedRequests);
     requestRepository.saveAll(rejectedRequests);
     return RequestMapper.toEventRequestStatusUpdateResult(confirmedRequests, rejectedRequests);
-  } // третий
+  }
 
   @Override
   public List<ParticipationRequestDto> getConfirmedRequestsByEventIds(List<Long> eventIds) {
@@ -254,7 +227,7 @@ public class RequestServiceImpl implements RequestService {
             requestRepository.findAllByEventInAndStatus(eventIds, StatusRequest.CONFIRMED)
                     .stream()
                     .collect(Collectors.groupingBy(
-                            participantRequest -> participantRequest.getEvent()));
+                            ParticipationRequest::getEvent));
 
     events.forEach(event ->
             event.setConfirmedRequests(
@@ -271,9 +244,7 @@ public class RequestServiceImpl implements RequestService {
             "Updating participation requests {} for the event {} created by user {} with statusRequest {}",
             updateStatusDto.getRequestIds(), eventId, initiatorId, updateStatusDto.getStatus());
 
-    //validateUserExist(initiatorId);
     final EventFullDto event = eventClient.getEventById(eventId);
-   //final EventFullDto event = fetchEvent(eventId, initiatorId);
     final StatusRequest newStatus = updateStatusDto.getStatus();
     final Boolean isModerated = event.getRequestModeration(); //
     final Integer participantLimit = event.getParticipantLimit();

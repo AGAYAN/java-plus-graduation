@@ -1,11 +1,9 @@
 package ru.practicum.event.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.EndPointHitDto;
@@ -13,9 +11,7 @@ import ru.practicum.StatsClient;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.GetEventPublicParam;
-import ru.practicum.dto.event.PublicEventParam;
 import ru.practicum.dto.event.enums.SortType;
-import ru.practicum.event.model.Event;
 import ru.practicum.event.service.EventService;
 
 import java.time.LocalDateTime;
@@ -86,9 +82,4 @@ public class PublicEventController {
         hitDto.setRequestTime(LocalDateTime.now());
         statsClient.saveHit(hitDto);
     }
-
-//    @GetMapping("/{eventId}")
-//    public EventFullDto getEvent(@PathVariable Long eventId) {
-//        return eventService.getEvent(eventId);
-//    }
 }

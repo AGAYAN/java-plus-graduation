@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,7 +17,6 @@ import java.time.LocalDateTime;
 @Slf4j
 public class ErrorHandler {
 
-  // 400 BAD REQUEST
   @ExceptionHandler({
           MethodArgumentNotValidException.class,
           MissingServletRequestParameterException.class,
@@ -31,7 +29,6 @@ public class ErrorHandler {
     return buildErrorResponse(exception, HttpStatus.BAD_REQUEST, exception.getMessage());
   }
 
-  // 404 NOT FOUND
   @ExceptionHandler(NotFoundException.class)
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public ResponseEntity<ApiError> handleNotFoundException(final NotFoundException exception) {
@@ -39,7 +36,6 @@ public class ErrorHandler {
     return buildErrorResponse(exception, HttpStatus.NOT_FOUND, exception.getMessage());
   }
 
-  // 409 CONFLICT
   @ExceptionHandler({ConflictException.class, AlreadyExistsException.class})
   @ResponseStatus(HttpStatus.CONFLICT)
   public ResponseEntity<ApiError> handleConflictExceptions(final RuntimeException exception) {
@@ -47,7 +43,6 @@ public class ErrorHandler {
     return buildErrorResponse(exception, HttpStatus.CONFLICT, exception.getMessage());
   }
 
-  // 500 INTERNAL SERVER ERROR - на всякий случай для всех остальных ошибок
   @ExceptionHandler(Exception.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ResponseEntity<ApiError> handleGenericException(final Exception exception) {

@@ -20,14 +20,11 @@ public interface EventRepository extends JpaRepository<Event, Long>, EventQueryR
 
   Optional<Event> findByIdAndState(Long id, State state);
 
-  boolean existsByIdAndInitiatorId(Long eventId, Long userId);
-
   boolean existsByCategoryId(Long id);
 
   Set<Event> findAllDistinctByIdIn(Set<Long> eventIds);
 
   Set<Event> findAllByIdIn(@Param("ids") Set<Long> ids);
 
-  boolean existsByTitle(String title);
 }
 

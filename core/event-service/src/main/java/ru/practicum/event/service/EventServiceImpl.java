@@ -1,49 +1,33 @@
 package ru.practicum.event.service;
 
-import com.fasterxml.jackson.databind.util.ArrayBuilders;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsDto;
-
 import ru.practicum.category.mapper.CategoryMapper;
-import ru.practicum.category.model.Category;
 import ru.practicum.category.service.CategoryService;
-import ru.practicum.controller.EventController;
-
 import ru.practicum.controller.RequestController;
 import ru.practicum.controller.UserController;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.*;
-import ru.practicum.dto.request.ParticipationRequestDto;
-import ru.practicum.dto.request.StatusRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.enums.StateAction;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
-import ru.practicum.event.model.Location;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.exception.AlreadyExistsException;
 import ru.practicum.exception.BadRequestException;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
-//import ru.practicum.request.mapper.RequestMapper;
 
-import javax.xml.stream.EventFilter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Transactional
@@ -54,11 +38,9 @@ public class EventServiceImpl implements EventService {
 
   private final EventRepository eventRepository;
   private final CategoryService categoryService;
-  //private final RequestRepository requestRepository;
   private final RequestController requestController;
   private final StatsClient statsClient;
   private final UserController userController;
-  private final EventController eventController;
 
   /**
    * Saves a new event data initiated by a current user.
@@ -133,14 +115,20 @@ public class EventServiceImpl implements EventService {
             .orElseThrow(() -> new NotFoundException(
                     "Event with id " + eventId + " not found or not published"));
 
-    requestController.getAllRequests(List.of(eventId));
+
+    event.setInitiator(userController.getUser(event.getInitiatorId()));
+
+    event.setConfirmedRequests(requestController.getAllRequests(List.of(eventId)).size());
+
     setViews(List.of(event));
+
     return EventMapper.toFullDto(event);
   }
 
   /**
    * Retrieves all existed in DB events that match the given conditions in the GetEventAdminRequest(performed by ADMIN).
    */
+
   @Transactional(readOnly = true)
   @Override
   public List<EventFullDto> getEvents(GetEventAdminRequest param) {
@@ -164,7 +152,7 @@ public class EventServiceImpl implements EventService {
             })
             .filter(Objects::nonNull)
             .distinct()
-            .collect(Collectors.toList());
+            .toList();
 
     Map<Long, UserDto> usersMap = initiatorIds.stream()
             .map(id -> Map.entry(id, userController.getUser(id)))
@@ -236,57 +224,6 @@ public class EventServiceImpl implements EventService {
   }
 
   /**
-   * Retrieves information about participation requests for the current user's event.
-   */
-//  @Transactional(readOnly = true)
-//  @Override
-//  public List<ParticipationRequestDto> getRequests(final Long initiatorId, final Long eventId) {
-//    log.debug("Retrieving event participants for event ID={}, posted by user ID={}.", eventId,
-//        initiatorId);
-//    validateUserExist(initiatorId, eventId);
-//    return RequestMapper.mapToDto(
-//        requestRepository.findAllByEventIdAndEventInitiatorId(eventId, initiatorId));
-//  }
-
-  /**
-   * Updates the participation request statuses for the specified event of the current user. The
-   * statuses can be changed to either {@code CONFIRMED} or {@code REJECTED}.
-   */
-//  @Override
-//  public EventRequestStatusUpdateResult updateRequestsStatus(
-//      final Long initiatorId,
-//      final Long eventId,
-//      final EventRequestStatusUpdateRequest updateStatusDto) {
-//    log.debug(
-//        "Updating participation requests {} for the event {} created by user {} with statusRequest {}",
-//        updateStatusDto.getRequestIds(), eventId, initiatorId, updateStatusDto.getStatus());
-//
-//    //validateUserExist(initiatorId);
-//
-//    final Event event = fetchEvent(eventId, initiatorId);
-//    final StatusRequest newStatus = updateStatusDto.getStatus();
-//    final Boolean isModerated = event.getRequestModeration();
-//    final Integer participantLimit = event.getParticipantLimit();
-//    final Integer confirmed = event.getConfirmedRequests();
-//
-//    if (!isModerated || participantLimit == 0) {
-//      return autoConfirmRequests(updateStatusDto.getRequestIds(), eventId);
-//    }
-//
-//    final List<ParticipationRequest> requestsToUpdate = getPendingRequests(
-//        updateStatusDto.getRequestIds(), eventId);
-//
-//    int availableSlots = participantLimit - confirmed;
-//    if (availableSlots <= 0) {
-//      log.warn(
-//          "Participant limit for the event {} has been reached: limit={}, confirmed requests={}.",
-//          eventId, event.getParticipantLimit(), event.getConfirmedRequests());
-//      throw new ConflictException("Participant limit for this event has been reached.");
-//    }
-//    return processRequestsWithLimit(requestsToUpdate, newStatus, availableSlots);
-//  }
-
-  /**
    * Gets specified Event created by User with given ID, with confirmedRequests and views data set.
    */
   private Event getEnrichedEvent(final Long initiatorId, final Long eventId) {
@@ -337,30 +274,6 @@ public class EventServiceImpl implements EventService {
 
   private String buildEventUri(final Long eventId) {
     return String.format("/events/%d", eventId);
-  }
-
-  private void setConfirmedRequests(final List<Event> events) {
-    log.debug("Setting confirmed requests to the events list {}.", events);
-
-    if (events.isEmpty()) {
-      log.debug("Events list is empty.");
-      return;
-    }
-
-    final List<Long> eventIds = events.stream().map(Event::getId).toList();
-
-    List<ParticipationRequestDto> allRequests = requestController.getAllRequests(eventIds); // ИСПРАВИТЬ
-
-    final Map<Long, List<ParticipationRequestDto>> confirmedRequests = allRequests.stream()
-            .filter(request -> StatusRequest.valueOf(request.getStatus()).equals(StatusRequest.CONFIRMED))
-            .collect(Collectors.groupingBy(ParticipationRequestDto::getEvent));
-
-    events.forEach(event ->
-            event.setConfirmedRequests(
-                    confirmedRequests.getOrDefault(event.getId(), List.of()).size())
-    );
-
-    log.debug("Confirmed requests have been set successfully to the events with IDs {}.", eventIds);
   }
 
 
@@ -420,70 +333,5 @@ public class EventServiceImpl implements EventService {
       throw new ConflictException("The event date must be at least two hours in the future.");
     }
   }
-
-  private void validateUserExist(final Long userId, final Long eventId) {
-    userController.getUser(userId);
-    if (!eventRepository.existsByIdAndInitiatorId(eventId, userId)) {
-      log.warn("Event ID={} with intiator ID={} not exists.", userId, eventId);
-      throw new NotFoundException("Event with current initiator not found.");
-    }
-  }
-
-//  private void validateUserExist(final Long userId) {
-//    userService.validateUserExist(userId);
-//  }
-//
-//  private EventRequestStatusUpdateResult autoConfirmRequests(final List<Long> requestIds,
-//                                                             final Long eventId) {
-//    log.debug("Confirming All requests.");
-//    final List<ParticipationRequest> requestsToUpdate = getPendingRequests(requestIds, eventId);
-//    requestsToUpdate.forEach(request -> request.setStatus(StatusRequest.CONFIRMED));
-//    requestRepository.saveAll(requestsToUpdate);
-//
-//    return EventMapper.toEventRequestStatusUpdateResult(requestsToUpdate, Collections.emptyList());
-//  }
-//
-//  private List<ParticipationRequest> getPendingRequests(final List<Long> requestIds,
-//                                                        final Long eventId) {
-//    log.debug("Fetching participation requests with IDs:{} and PENDING status.", requestIds);
-//    final List<ParticipationRequest> requests = requestRepository.findAllByIdInAndEventIdAndStatus(
-//        requestIds, eventId, StatusRequest.PENDING);
-//    if (requestIds.size() > requests.size()) {
-//      log.warn("StatusRequest should be PENDING for all requests to be updated.");
-//      throw new ConflictException(
-//          "StatusRequest should be PENDING for all requests to be updated.");
-//    }
-//    return requests;
-//  }
-//
-//
-//  private EventRequestStatusUpdateResult processRequestsWithLimit(
-//          final List<ParticipationRequest> requestsToUpdate,
-//          final StatusRequest newStatus, final Integer availableSlots) {
-//    log.debug("Processing requests {} to update status with {}. Available slots ={}",
-//        requestsToUpdate, newStatus, availableSlots);
-//    final List<ParticipationRequest> confirmedRequests = new ArrayList<>();
-//    final List<ParticipationRequest> rejectedRequests = new ArrayList<>();
-//    int available = availableSlots;
-//
-//    if (newStatus.equals(StatusRequest.REJECTED)) {
-//      requestsToUpdate.forEach(r -> r.setStatus(newStatus));
-//      rejectedRequests.addAll(requestRepository.saveAll(requestsToUpdate));
-//    } else {
-//      for (ParticipationRequest request : requestsToUpdate) {
-//        if (available > 0) {
-//          request.setStatus(StatusRequest.CONFIRMED);
-//          confirmedRequests.add(request);
-//          available--;
-//        } else {
-//          request.setStatus(StatusRequest.REJECTED);
-//          rejectedRequests.add(request);
-//        }
-//      }
-//    }
-//    requestRepository.saveAll(confirmedRequests);
-//    requestRepository.saveAll(rejectedRequests);
-//    return EventMapper.toEventRequestStatusUpdateResult(confirmedRequests, rejectedRequests);
-//  }
 
 }

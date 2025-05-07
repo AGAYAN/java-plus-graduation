@@ -15,7 +15,6 @@ import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,9 +27,6 @@ public class CommentServiceImpl implements CommentService {
   private final CommentRepository commentRepository;
   private final EventController eventStates;
 
-  //private final UserRepository userRepository;
-  //private final EventRepository eventRepository;
-
   /**
    * /users/{userId}/comments?eventId={eventId}
    * <p> Saves a new comment data initiated by a current user.
@@ -40,23 +36,15 @@ public class CommentServiceImpl implements CommentService {
     Long userId = commentDto.getUserId();
     Long eventId = commentDto.getEventId();
 
-    // Предполагается, что для проверки состояния нужно использовать объект Event
     EventFullDto event = eventStates.getEventById(commentDto.getEventId());
 
-    // Проверка на состояние публикации события
     if (!event.getState().equals("PUBLISHED")) {
       log.warn("Cannot add comment to an unpublished event, event state = {}", event.getState());
       throw new ConflictException("Cannot save comments for an unpublished event.");
     }
 
-    // Маппинг комментария с учетом userId и eventId
     Comment comment = CommentMapper.mapTo(commentDto, userId, eventId);
     comment.setCreated(LocalDateTime.now());
-
-    // Сравнение по ID инициатора (если текущий пользователь является инициатором события)
-    if (userId.equals(event.getInitiator())) {
-      comment.setInitiator(true);
-    }
 
     Comment savedComment = commentRepository.save(comment);
     return CommentMapper.mapToCommentDto(savedComment);
@@ -95,7 +83,6 @@ public class CommentServiceImpl implements CommentService {
   public CommentDto updateUserComment(final Long userId, final Long commentId,
                                       final CommentDto commentDto) {
     Comment comment = fetchComment(commentId);
-//    fetchUser(userId);
 
     if (!comment.getUser().equals(userId)) {
       throw new ConflictException("A user can update only their own comments.");
@@ -143,23 +130,6 @@ public class CommentServiceImpl implements CommentService {
     final PageRequest page = PageRequest.of(from / size, size);
     return commentRepository.findAllByEventId(eventId, page).getContent();
   }
-//
-//  private User fetchUser(final Long userId) {
-//    log.debug("Fetching user with ID {}", userId);
-//    return userRepository.findById(userId)
-//        .orElseThrow(() -> {
-//          log.warn("User with ID {} not found.", userId);
-//          return new NotFoundException("The user not found.");
-//        });
-//  }
-//
-//  private Event fetchEvent(final Long eventId) {
-//    return eventRepository.findById(eventId)
-//        .orElseThrow(() -> {
-//          log.warn("Event with ID {} not found.", eventId);
-//          return new NotFoundException("The event not found.");
-//        });
-//  }
 
   private Comment fetchComment(final Long commentId) {
     return commentRepository.findById(commentId)

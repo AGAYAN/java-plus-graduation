@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.user.UserDto;
-
 import ru.practicum.exception.AlreadyExistsException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.mappers.UserMapper;
@@ -66,16 +65,6 @@ public class UserServiceImpl implements UserService {
         .orElseThrow(() ->
             new EntityNotFoundException("User not found with id: " + userId));
     return UserMapper.mapToUserDto(user);
-  }
-
-  @Override
-  public void validateUserExist(final Long id) {
-    log.debug("Validating user id {} is not null and exist in DB", id);
-    if (id == null || !userRepository.existsById(id)) {
-      log.warn("Validation User with ID = {} is not null and exists in DB failed.", id);
-      throw new NotFoundException("User not found.");
-    }
-    log.debug("Success: user ID {} is not null and exist in DB.", id);
   }
 
   private User save(User user) {

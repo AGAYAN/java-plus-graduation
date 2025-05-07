@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsDto;
-
 import ru.practicum.category.model.Category;
 import ru.practicum.controller.RequestController;
 import ru.practicum.controller.UserController;
@@ -24,7 +23,6 @@ import ru.practicum.event.enums.State;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
 
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,10 +36,11 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
     private RequestController requestController;
 
     @Autowired
-    public EventQueryRepositoryImpl(EntityManager entityManager, RequestController requestController, StatsClient statsClient) {
+    public EventQueryRepositoryImpl(EntityManager entityManager, RequestController requestController, StatsClient statsClient, UserController userController) {
         this.requestController = requestController;
         this.entityManager = entityManager;
         this.statsClient = statsClient;
+        this.userController = userController;
     }
 
     public EventQueryRepositoryImpl(final EntityManager entityManager, StatsClient statsClient) {

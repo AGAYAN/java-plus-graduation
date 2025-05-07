@@ -1,11 +1,8 @@
 package ru.practicum.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.event.*;
-import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.event.model.Event;
-
 
 import java.util.List;
 import java.util.Set;
@@ -55,16 +52,4 @@ public interface EventService {
    *  Retrieves a set of events based on the provided event IDs.
    */
   Set<Event> getEvents(Set<Long> events);
-
-  /**
-   * Retrieves information about participation requests for the current user's event.
-   */
- //List<ParticipationRequestDto> getRequests(Long initiatorId, Long eventId);
-
-  /**
-   * Updates the participation request statuses for the specified event of the current user. The
-   * statuses can be changed to either {@code CONFIRMED} or {@code REJECTED}.
-   */
-  //EventRequestStatusUpdateResult updateRequestsStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest updateStatusDto);
-
 }

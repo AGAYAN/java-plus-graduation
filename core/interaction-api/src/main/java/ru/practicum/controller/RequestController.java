@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
-
 import java.util.List;
 
 
@@ -17,4 +16,7 @@ public interface RequestController {
 
    @GetMapping("/request/full")
    void getAllRequestse(@RequestParam List<EventFullDto> eventIds);
+
+   @GetMapping("/confirmed-count")
+   int getConfirmedRequestsCount(@RequestParam Long eventId);
 }

@@ -1,7 +1,5 @@
 package ru.practicum.comment.service;
 
-
-
 import ru.practicum.dto.comment.CommentDto;
 import ru.practicum.dto.comment.GetCommentsAdminRequest;
 
