@@ -1,10 +1,10 @@
 package ru.practicum.dto.compilation;
 
-import java.util.HashSet;
-import java.util.Set;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import ru.practicum.dto.event.EventShortDto;
+
+import java.util.Set;
 
 /**
  * Is used in the Admin API - as RESPONSE

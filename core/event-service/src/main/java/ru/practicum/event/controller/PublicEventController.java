@@ -27,7 +27,7 @@ public class PublicEventController {
     private final StatsClient statsClient;
 
     @GetMapping
-    public List<EventShortDto > getEvents(@RequestParam(value = "text", required = false) String text,
+    public List<EventShortDto> getEvents(@RequestParam(value = "text", required = false) String text,
                                          @RequestParam(value = "categories", required = false) List<Long> categories,
                                          @RequestParam(value = "paid", required = false) Boolean paid,
                                          @RequestParam(value = "rangeStart", required = false)

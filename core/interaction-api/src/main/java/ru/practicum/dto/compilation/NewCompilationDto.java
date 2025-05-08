@@ -2,9 +2,9 @@ package ru.practicum.dto.compilation;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.Set;
 import lombok.Data;
-import ru.practicum.dto.event.EventShortDto;
+
+import java.util.Set;
 
 /**
  * Is used in the ADMIN API - as REQUEST body

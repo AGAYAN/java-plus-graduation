@@ -48,6 +48,7 @@ public interface EventService {
    * Retrieving published events with filtering options.
    */
   List<EventShortDto> getEvents(GetEventPublicParam param, HttpServletRequest request);
+
   /**
    *  Retrieves a set of events based on the provided event IDs.
    */
