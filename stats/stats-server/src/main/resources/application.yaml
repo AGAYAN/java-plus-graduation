@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ewm-stats-server
+    name: stats-server
   config:
     import: "configserver:"
   cloud:
