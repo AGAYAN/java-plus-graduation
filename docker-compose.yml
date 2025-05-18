@@ -170,8 +170,8 @@ services:
       interval: 10s
       retries: 15
 
-  #  main-service
-  main-service:
+  #  comment-service
+  comment-service:
     build: core/comment-service
     container_name: comment-service
     depends_on:
