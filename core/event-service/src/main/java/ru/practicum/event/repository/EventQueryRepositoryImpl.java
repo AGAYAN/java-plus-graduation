@@ -133,7 +133,7 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
         CriteriaQuery<Tuple> query = cb.createTupleQuery();
         Root<Event> eventTable = query.from(Event.class);
 
-        Join<EventFullDto, Category> categoryJoin = eventTable.join("category");
+        Join<Event, Category> categoryJoin = eventTable.join("category");
 
 
         query.multiselect(

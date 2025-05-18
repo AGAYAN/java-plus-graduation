@@ -172,8 +172,8 @@ services:
 
   #  main-service
   main-service:
-    build: core/main-service
-    container_name: main-service
+    build: core/comment-service
+    container_name: comment-service
     depends_on:
       user-db:
         condition: service_healthy
