@@ -34,19 +34,21 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
 
     private final EntityManager entityManager;
     private UserController userController;
-    @Lazy
-    private final EventService eventService;
+    private final StatsClient statsClient;
+    private final RequestController requestController;
 
     @Autowired
-    public EventQueryRepositoryImpl(EntityManager entityManager, StatsClient statsClient, UserController userController, EventService eventService) {
+    public EventQueryRepositoryImpl(EntityManager entityManager, UserController userController, StatsClient statsClient1, RequestController requestController) {
         this.entityManager = entityManager;
         this.userController = userController;
-        this.eventService = eventService;
+        this.statsClient = statsClient1;
+        this.requestController = requestController;
     }
 
-    public EventQueryRepositoryImpl(final EntityManager entityManager, StatsClient statsClient, EventService eventService) {
+    public EventQueryRepositoryImpl(final EntityManager entityManager, StatsClient statsClient1, RequestController requestController) {
         this.entityManager = entityManager;
-        this.eventService = eventService;
+        this.statsClient = statsClient1;
+        this.requestController = requestController;
     }
 
     @Override
@@ -211,14 +213,14 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
             .map(event -> "/events/" + event.getId())
             .collect(Collectors.toList());
 
-        Map<String, Long> viewsMap = eventService.getViewsForEvents(rangeStart, rangeEnd, uris);
+        Map<String, Long> viewsMap = getViewsForEvents(rangeStart, rangeEnd, uris);
 
         eventFullDtos.forEach(event -> {
             String uri = "/events/" + event.getId();
             event.setViews(viewsMap.getOrDefault(uri, 0L));
         });
 
-        Map<Long, Long> confirmedRequestsMap = eventService.getConfirmedRequests(
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequests(
             eventFullDtos.stream().map(EventShortDto::getId).collect(Collectors.toList())
         );
 
@@ -231,19 +233,44 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
             .map(event -> "/events/" + event.getId())
             .collect(Collectors.toList());
 
-        Map<String, Long> viewsMap = eventService.getViewsForEvents(rangeStart, rangeEnd, uris);
+        Map<String, Long> viewsMap = getViewsForEvents(rangeStart, rangeEnd, uris);
 
         eventFullDtos.forEach(event -> {
             String uri = "/events/" + event.getId();
             event.setViews(viewsMap.getOrDefault(uri, 0L));
         });
 
-        Map<Long, Long> confirmedRequestsMap = eventService.getConfirmedRequests(
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequests(
             eventFullDtos.stream().map(EventFullDto::getId).collect(Collectors.toList())
         );
 
         eventFullDtos.forEach(event -> event.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(),
             0L).intValue()));
+    }
+
+    public Map<Long, Long> getConfirmedRequests(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<ParticipationRequestDto> requestDtos = requestController.getAllRequests(eventIds);
+
+        return requestDtos.stream()
+                .filter(request -> StatusRequest.CONFIRMED.name().equals(request.getStatus()))
+                .collect(Collectors.groupingBy(
+                        ParticipationRequestDto::getEvent,
+                        Collectors.counting()
+                ));
+    }
+
+    public Map<String, Long> getViewsForEvents(LocalDateTime rangeStart, LocalDateTime rangeEnd, List<String> uris) {
+        String start = rangeStart != null ? rangeStart.toString() : LocalDateTime.now().toString();
+        String end = rangeEnd != null ? rangeEnd.toString() : LocalDateTime.now().toString();
+
+        ViewStatsDto[] stats = statsClient.getStats(start, end, uris.toArray(new String[0]), true);
+
+        return Arrays.stream(stats)
+                .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits, (a, b) -> b));
     }
 
     private List<EventFullDto> mapToEventFullDtos(List<Tuple> tuples) {

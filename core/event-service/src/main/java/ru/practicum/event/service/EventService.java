@@ -56,8 +56,4 @@ public interface EventService {
    */
   Set<Event> getEvents(Set<Long> events);
 
-  Map<String, Long> getViewsForEvents(LocalDateTime rangeStart, LocalDateTime rangeEnd, List<String> uris);
-
-  Map<Long, Long> getConfirmedRequests(List<Long> eventIds);
-
   }
