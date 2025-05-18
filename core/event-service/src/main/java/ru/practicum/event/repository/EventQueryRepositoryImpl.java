@@ -5,6 +5,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Repository;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsDto;
@@ -33,6 +34,7 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
 
     private final EntityManager entityManager;
     private UserController userController;
+    @Lazy
     private final EventService eventService;
 
     @Autowired
