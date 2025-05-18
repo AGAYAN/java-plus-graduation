@@ -18,13 +18,4 @@ public interface EventController {
     @GetMapping("/events/{eventId}")
     EventFullDto getEventById(@PathVariable Long eventId);
 
-    @PatchMapping("/events/{eventId}")
-    ResponseEntity<EventFullDto> updateEvent(
-            @PathVariable("eventId") @NotNull @Positive Long eventId,
-            @Validated @RequestBody UpdateEventUserRequest eventDto);
-
-    @GetMapping("/users/{userId}/events/{eventId}")
-    ResponseEntity<EventFullDto> getEvent(
-            @PathVariable("userId") @NotNull @Positive Long userId,
-            @PathVariable("eventId")@NotNull @Positive Long eventId);
 }

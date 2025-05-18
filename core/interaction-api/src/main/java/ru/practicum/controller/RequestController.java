@@ -14,9 +14,6 @@ public interface RequestController {
    @GetMapping("/request")
    List<ParticipationRequestDto> getAllRequests(@RequestParam List<Long> eventIds);
 
-   @GetMapping("/request/full")
-   void getAllRequestse(@RequestParam List<EventFullDto> eventIds);
-
    @GetMapping("/confirmed-count")
    int getConfirmedRequestsCount(@RequestParam Long eventId);
 }

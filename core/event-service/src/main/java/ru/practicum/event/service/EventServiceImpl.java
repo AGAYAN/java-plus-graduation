@@ -15,6 +15,8 @@ import ru.practicum.controller.RequestController;
 import ru.practicum.controller.UserController;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.*;
+import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.request.StatusRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.enums.StateAction;
@@ -332,6 +334,33 @@ public class EventServiceImpl implements EventService {
     if (!eventDate.isAfter(LocalDateTime.now().plusHours(minimumTimeGap))) {
       throw new ConflictException("The event date must be at least two hours in the future.");
     }
+  }
+
+  @Override
+  public Map<Long, Long> getConfirmedRequests(List<Long> eventIds) {
+    if (eventIds == null || eventIds.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    List<ParticipationRequestDto> requestDtos = requestController.getAllRequests(eventIds);
+
+    return requestDtos.stream()
+            .filter(request -> StatusRequest.CONFIRMED.name().equals(request.getStatus()))
+            .collect(Collectors.groupingBy(
+                    ParticipationRequestDto::getEvent,
+                    Collectors.counting()
+            ));
+  }
+
+  @Override
+  public Map<String, Long> getViewsForEvents(LocalDateTime rangeStart, LocalDateTime rangeEnd, List<String> uris) {
+    String start = rangeStart != null ? rangeStart.toString() : LocalDateTime.now().toString();
+    String end = rangeEnd != null ? rangeEnd.toString() : LocalDateTime.now().toString();
+
+    ViewStatsDto[] stats = statsClient.getStats(start, end, uris.toArray(new String[0]), true);
+
+    return Arrays.stream(stats)
+            .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits, (a, b) -> b));
   }
 
 }

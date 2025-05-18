@@ -36,8 +36,6 @@ public class RequestServiceImpl implements RequestService {
   @Override
   @Transactional
   public ParticipationRequestDto addRequest(final Long userId, final Long eventId) {
-    userClient.getUser(userId).getId();
-
     if (eventId == null || eventId <= 0) {
       throw new IllegalArgumentException("ID события должен быть больше 0");
     }

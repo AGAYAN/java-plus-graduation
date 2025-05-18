@@ -23,7 +23,6 @@ import java.util.List;
 @Slf4j
 public class CategoryServiceImpl implements CategoryService {
 
-  private final CategoryRepository repository;
   private final EventRepository eventRepository;
   private final CategoryRepository categoryRepository;
 
@@ -33,12 +32,12 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public CategoryDto addCategory(NewCategoryDto dto) {
     log.info("Validating category dto: {}", dto);
-    if (repository.existsByName(dto.getName())) {
+    if (categoryRepository.existsByName(dto.getName())) {
       throw new AlreadyExistsException("Category with name " + dto.getName() + " already exists");
     }
 
     Category category = CategoryMapper.toCategory(dto);
-    repository.save(category);
+    categoryRepository.save(category);
     log.info("Category saved: {}", category);
 
     return CategoryMapper.toCategoryDto(category);
@@ -61,7 +60,7 @@ public class CategoryServiceImpl implements CategoryService {
   public CategoryDto getCategoryById(Long id) {
     log.info("Get category by id: {}", id);
 
-    return repository.findById(id)
+    return categoryRepository.findById(id)
         .map(CategoryMapper::toCategoryDto)
         .orElseThrow(() -> new NotFoundException("Category with id " + id + " not found"));
   }
@@ -72,14 +71,14 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public CategoryDto updateCategory(Long id, NewCategoryDto dto) {
     log.info("Update category: {}", dto);
-    Category category = repository.findById(id)
+    Category category = categoryRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Category with id " + id + " not found"));
-    if (repository.existsByName(dto.getName()) && !category.getName().equals(dto.getName())) {
+    if (categoryRepository.existsByName(dto.getName()) && !category.getName().equals(dto.getName())) {
       log.warn("Failed to update category. Name '{}' already exists.", dto.getName());
       throw new AlreadyExistsException("Category name already exists.");
     }
     category.setName(dto.getName());
-    repository.save(category);
+    categoryRepository.save(category);
     return CategoryMapper.toCategoryDto(category);
   }
 
@@ -89,13 +88,13 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public void deleteCategory(Long id) {
     log.info("Delete category by id: {}", id);
-    if (!repository.existsById(id)) {
+    if (!categoryRepository.existsById(id)) {
       throw new NotFoundException("Category with id " + id + " not found");
     }
     if (eventRepository.existsByCategoryId(id)) {
       log.warn("Category with id {} is in use by an event and cannot be deleted.", id);
       throw new ConflictException("Cannot be deleted; it's in use by an event.");
     }
-    repository.deleteById(id);
+    categoryRepository.deleteById(id);
   }
 }
