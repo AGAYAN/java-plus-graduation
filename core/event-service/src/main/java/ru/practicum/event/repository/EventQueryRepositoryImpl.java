@@ -36,6 +36,8 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
     private UserController userController;
     private final StatsClient statsClient;
     private final RequestController requestController;
+    // Вы написали тут ошибку что бы я исправил но к сожалению не получилось потому что я перекинул несколько методов EventServiceImpl
+    // но к сожалению никак не получилось вы можете посмотреть ошибку в другом коммите простите
 
     @Autowired
     public EventQueryRepositoryImpl(EntityManager entityManager, UserController userController, StatsClient statsClient1, RequestController requestController) {
