@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ewm-main-service
+    name: ewm-comment-service
   config:
     import: "configserver:"
   cloud:
