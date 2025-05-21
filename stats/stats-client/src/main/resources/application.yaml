@@ -1,0 +1,7 @@
+stats:
+  client:
+    url: http://localhost:9090
+
+logging:
+  level:
+    org.springframework.core.env: DEBUG
