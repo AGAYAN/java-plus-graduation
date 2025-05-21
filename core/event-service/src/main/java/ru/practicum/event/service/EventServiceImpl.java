@@ -1,6 +1,7 @@
 package ru.practicum.event.service;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Tuple;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +19,12 @@ import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.request.StatusRequest;
 import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.enums.StateAction;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
+import ru.practicum.event.model.Location;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.BadRequestException;
 import ru.practicum.exception.ConflictException;
@@ -336,5 +339,108 @@ public class EventServiceImpl implements EventService {
     }
   }
 
+
+  public Map<Long, Long> getConfirmedRequests(List<Long> eventIds) {
+    if (eventIds == null || eventIds.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    List<ParticipationRequestDto> requestDtos = requestController.getAllRequests(eventIds);
+
+    return requestDtos.stream()
+            .filter(request -> StatusRequest.CONFIRMED.name().equals(request.getStatus()))
+            .collect(Collectors.groupingBy(
+                    ParticipationRequestDto::getEvent,
+                    Collectors.counting()
+            ));
+  }
+
+  @Override
+  public Map<String, Long> getViewsForEvents(LocalDateTime rangeStart, LocalDateTime rangeEnd, List<String> uris) {
+    String start = rangeStart != null ? rangeStart.toString() : LocalDateTime.now().toString();
+    String end = rangeEnd != null ? rangeEnd.toString() : LocalDateTime.now().toString();
+
+    ViewStatsDto[] stats = statsClient.getStats(start, end, uris.toArray(new String[0]), true);
+
+    return Arrays.stream(stats)
+            .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits, (a, b) -> b));
+  }
+
+  @Override
+  public List<EventFullDto> mapToEventFullDtos(List<Tuple> tuples) {
+    return tuples.stream().map(tuple -> {
+      String state = Optional.ofNullable(tuple.get("state", State.class))
+              .map(State::name)
+              .orElse("");
+
+      Long initiatorId = tuple.get("initiatorId", Long.class);
+      UserDto initiator;
+
+      try {
+        initiator = userController.getUser(initiatorId);
+      } catch (Exception e) {
+        initiator = new UserDto();
+        initiator.setId(initiatorId);
+        initiator.setName("Неизвестный пользователь");
+      }
+
+      return new EventFullDto(
+              tuple.get("annotation", String.class),
+              new CategoryDto(
+                      tuple.get("categoryId", Long.class),
+                      tuple.get("categoryName", String.class)
+              ),
+              0,
+              tuple.get("createdOn", LocalDateTime.class),
+              Optional.ofNullable(tuple.get("description", String.class)).orElse(""),
+              tuple.get("eventDate", LocalDateTime.class),
+              tuple.get("eventId", Long.class),
+              initiator,
+              new Location(
+                      tuple.get("lat", Float.class),
+                      tuple.get("lon", Float.class)
+              ),
+              tuple.get("paid", Boolean.class),
+              tuple.get("participantLimit", Integer.class),
+              tuple.get("publishedOn", LocalDateTime.class),
+              tuple.get("requestModeration", Boolean.class),
+              state,
+              tuple.get("title", String.class)
+      );
+    }).collect(Collectors.toList());
+  }
+
+  public List<EventShortDto> mapToEventShortDtos(List<Tuple> tuples) {
+    return tuples.stream()
+            .map(tuple -> {
+              Long initiatorId = tuple.get("initiatorId", Long.class);
+              UserDto initiator;
+
+              try {
+                initiator = userController.getUser(initiatorId);
+              } catch (Exception e) {
+                initiator = new UserDto();
+                initiator.setId(initiatorId);
+                initiator.setName("Неизвестный пользователь");
+              }
+
+              return new EventShortDto(
+                      tuple.get("annotation", String.class),
+                      new CategoryDto(
+                              tuple.get("categoryId", Long.class),
+                              tuple.get("categoryName", String.class)
+                      ),
+                      tuple.get("eventDate", LocalDateTime.class),
+                      tuple.get("eventId", Long.class),
+                      new UserShortDto(
+                              initiator.getId(),
+                              initiator.getName()
+                      ).getId(),
+                      tuple.get("paid", Boolean.class),
+                      tuple.get("title", String.class)
+              );
+            })
+            .collect(Collectors.toList());
+  }
 
 }
