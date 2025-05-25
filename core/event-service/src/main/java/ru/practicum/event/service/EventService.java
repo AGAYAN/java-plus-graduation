@@ -1,13 +1,10 @@
 package ru.practicum.event.service;
 
-import jakarta.persistence.Tuple;
 import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.dto.event.*;
 import ru.practicum.event.model.Event;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public interface EventService {
@@ -56,13 +53,5 @@ public interface EventService {
    *  Retrieves a set of events based on the provided event IDs.
    */
   Set<Event> getEvents(Set<Long> events);
-
-  Map<String, Long> getViewsForEvents(LocalDateTime rangeStart, LocalDateTime rangeEnd, List<java.lang.String> uris);
-
-  List<EventFullDto> mapToEventFullDtos(List<Tuple> tuples);
-
-  List<EventShortDto> mapToEventShortDtos(List<Tuple> tuples);
-
-  Map<Long, Long> getConfirmedRequests(List<Long> eventIds);
 
   }
