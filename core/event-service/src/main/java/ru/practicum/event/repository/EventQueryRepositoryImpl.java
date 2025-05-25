@@ -4,40 +4,66 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Repository;
+import ru.practicum.StatsClient;
+import ru.practicum.ViewStatsDto;
 import ru.practicum.category.model.Category;
+import ru.practicum.controller.RequestController;
+import ru.practicum.controller.UserController;
+import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.enums.SortType;
+import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.request.StatusRequest;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.event.enums.State;
 import ru.practicum.event.model.Event;
+import ru.practicum.event.model.Location;
 import ru.practicum.event.service.EventService;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
-@RequiredArgsConstructor
 public class EventQueryRepositoryImpl implements EventQueryRepository {
 
     private final EntityManager entityManager;
-    private EventService eventService;
+    private UserController userController;
+    private final StatsClient statsClient;
+    private final RequestController requestController;
+    // Вы написали тут ошибку что бы я исправил но к сожалению не получилось потому что я перекинул несколько методов EventServiceImpl
+    // но к сожалению никак не получилось вы можете посмотреть ошибку в другом коммите простите
+
+    @Autowired
+    public EventQueryRepositoryImpl(EntityManager entityManager, UserController userController, StatsClient statsClient1, RequestController requestController) {
+        this.entityManager = entityManager;
+        this.userController = userController;
+        this.statsClient = statsClient1;
+        this.requestController = requestController;
+    }
+
+    public EventQueryRepositoryImpl(final EntityManager entityManager, StatsClient statsClient1, RequestController requestController) {
+        this.entityManager = entityManager;
+        this.statsClient = statsClient1;
+        this.requestController = requestController;
+    }
 
     @Override
-    public List<EventFullDto> adminFindEvents(final List<Long> users,
-                                              final List<String> states,
-                                              final List<Long> categories,
-                                              final LocalDateTime rangeStart,
-                                              final LocalDateTime rangeEnd,
-                                              int from,
-                                              int size) {
+    public List<Event> adminFindEvents(List<Long> users,
+                                       List<String> states,
+                                       List<Long> categories,
+                                       LocalDateTime rangeStart,
+                                       LocalDateTime rangeEnd,
+                                       int from,
+                                       int size) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+        CriteriaQuery<Event> query = cb.createQuery(Event.class);
         Root<Event> eventTable = query.from(Event.class);
 
         Join<Event, Category> categoryJoin = eventTable.join("category");
@@ -70,14 +96,14 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
 
         if (states != null && !states.isEmpty()) {
             List<State> stateEnums = states.stream()
-                    .map(State::valueOf) // Преобразуем строку в перечисление
+                    .map(State::valueOf)
                     .collect(Collectors.toList());
 
             predicate = cb.and(predicate, eventTable.get("state").in(stateEnums));
         }
 
         if (categories != null && !categories.isEmpty()) {
-            predicate = cb.and(predicate, categoryJoin.get("id").in(categories));
+            predicate = cb.and(predicate, eventTable.get("category").get("id").in(categories));
         }
 
         if (rangeStart != null) {
@@ -91,7 +117,7 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
         query.where(predicate);
 
         List<Tuple> tuples = fetchResults(query, from, size);
-        List<EventFullDto> resultList = eventService.mapToEventFullDtos(tuples);
+        List<EventFullDto> resultList = mapToEventFullDtos(tuples);
 
         populateEventDetails(resultList, rangeStart, rangeEnd);
 
@@ -110,7 +136,7 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
                                                final int size) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Tuple> query = cb.createTupleQuery();
+        CriteriaQuery<Event> query = cb.createQuery(Event.class);
         Root<Event> eventTable = query.from(Event.class);
 
         Join<Event, Category> categoryJoin = eventTable.join("category");
@@ -141,7 +167,7 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
         }
 
         if (categories != null && !categories.isEmpty()) {
-            predicate = cb.and(predicate, categoryJoin.get("id").in(categories));
+            predicate = cb.and(predicate, eventTable.get("category").get("id").in(categories));
         }
 
         if (paid != null) {
@@ -160,13 +186,13 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
 
         query.where(predicate);
 
-        if (sort != null && sort.equals(SortType.EVENT_DATE)) {
+        if (sort != null && sort.equals("EVENT_DATE")) {
             query.orderBy(cb.asc(eventTable.get("eventDate")));
         }
 
         List<Tuple> tuples = fetchResults(query, from, size);
 
-        List<EventShortDto> resultList = eventService.mapToEventShortDtos(tuples);
+        List<EventShortDto> resultList = mapToEventShortDtos(tuples);
 
         populateEventShortDetails(resultList, rangeStart, rangeEnd);
 
@@ -189,14 +215,14 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
             .map(event -> "/events/" + event.getId())
             .collect(Collectors.toList());
 
-        Map<String, Long> viewsMap = eventService.getViewsForEvents(rangeStart, rangeEnd, uris);
+        Map<String, Long> viewsMap = getViewsForEvents(rangeStart, rangeEnd, uris);
 
         eventFullDtos.forEach(event -> {
             String uri = "/events/" + event.getId();
             event.setViews(viewsMap.getOrDefault(uri, 0L));
         });
 
-        Map<Long, Long> confirmedRequestsMap = eventService.getConfirmedRequests(
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequests(
             eventFullDtos.stream().map(EventShortDto::getId).collect(Collectors.toList())
         );
 
@@ -209,14 +235,14 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
             .map(event -> "/events/" + event.getId())
             .collect(Collectors.toList());
 
-        Map<String, Long> viewsMap = eventService.getViewsForEvents(rangeStart, rangeEnd, uris);
+        Map<String, Long> viewsMap = getViewsForEvents(rangeStart, rangeEnd, uris);
 
         eventFullDtos.forEach(event -> {
             String uri = "/events/" + event.getId();
             event.setViews(viewsMap.getOrDefault(uri, 0L));
         });
 
-        Map<Long, Long> confirmedRequestsMap = eventService.getConfirmedRequests(
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequests(
             eventFullDtos.stream().map(EventFullDto::getId).collect(Collectors.toList())
         );
 
@@ -224,5 +250,105 @@ public class EventQueryRepositoryImpl implements EventQueryRepository {
             0L).intValue()));
     }
 
+    public Map<Long, Long> getConfirmedRequests(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<ParticipationRequestDto> requestDtos = requestController.getAllRequests(eventIds);
+
+        return requestDtos.stream()
+                .filter(request -> StatusRequest.CONFIRMED.name().equals(request.getStatus()))
+                .collect(Collectors.groupingBy(
+                        ParticipationRequestDto::getEvent,
+                        Collectors.counting()
+                ));
+    }
+
+    public Map<String, Long> getViewsForEvents(LocalDateTime rangeStart, LocalDateTime rangeEnd, List<String> uris) {
+        String start = rangeStart != null ? rangeStart.toString() : LocalDateTime.now().toString();
+        String end = rangeEnd != null ? rangeEnd.toString() : LocalDateTime.now().toString();
+
+        ViewStatsDto[] stats = statsClient.getStats(start, end, uris.toArray(new String[0]), true);
+
+        return Arrays.stream(stats)
+                .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits, (a, b) -> b));
+    }
+
+    private List<EventFullDto> mapToEventFullDtos(List<Tuple> tuples) {
+        return tuples.stream().map(tuple -> {
+            String state = Optional.ofNullable(tuple.get("state", State.class))
+                    .map(State::name)
+                    .orElse("");
+
+            Long initiatorId = tuple.get("initiatorId", Long.class);
+            UserDto initiator;
+
+            try {
+                initiator = userController.getUser(initiatorId);
+            } catch (Exception e) {
+                initiator = new UserDto();
+                initiator.setId(initiatorId);
+                initiator.setName("Неизвестный пользователь");
+            }
+
+            return new EventFullDto(
+                    tuple.get("annotation", String.class),
+                    new CategoryDto(
+                            tuple.get("categoryId", Long.class),
+                            tuple.get("categoryName", String.class)
+                    ),
+                    0,
+                    tuple.get("createdOn", LocalDateTime.class),
+                    Optional.ofNullable(tuple.get("description", String.class)).orElse(""),
+                    tuple.get("eventDate", LocalDateTime.class),
+                    tuple.get("eventId", Long.class),
+                    initiator,
+                    new Location(
+                            tuple.get("lat", Float.class),
+                            tuple.get("lon", Float.class)
+                    ),
+                    tuple.get("paid", Boolean.class),
+                    tuple.get("participantLimit", Integer.class),
+                    tuple.get("publishedOn", LocalDateTime.class),
+                    tuple.get("requestModeration", Boolean.class),
+                    state,
+                    tuple.get("title", String.class)
+            );
+        }).collect(Collectors.toList());
+    }
+
+    private List<EventShortDto> mapToEventShortDtos(List<Tuple> tuples) {
+        return tuples.stream()
+                .map(tuple -> {
+                    Long initiatorId = tuple.get("initiatorId", Long.class);
+                    UserDto initiator;
+
+                    try {
+                        initiator = userController.getUser(initiatorId);
+                    } catch (Exception e) {
+                        initiator = new UserDto();
+                        initiator.setId(initiatorId);
+                        initiator.setName("Неизвестный пользователь");
+                    }
+
+                    return new EventShortDto(
+                            tuple.get("annotation", String.class),
+                            new CategoryDto(
+                                    tuple.get("categoryId", Long.class),
+                                    tuple.get("categoryName", String.class)
+                            ),
+                            tuple.get("eventDate", LocalDateTime.class),
+                            tuple.get("eventId", Long.class),
+                            new UserShortDto(
+                                    initiator.getId(),
+                                    initiator.getName()
+                            ).getId(),
+                            tuple.get("paid", Boolean.class),
+                            tuple.get("title", String.class)
+                    );
+                })
+                .collect(Collectors.toList());
+    }
 
 }

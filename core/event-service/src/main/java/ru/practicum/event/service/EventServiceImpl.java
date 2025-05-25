@@ -16,6 +16,7 @@ import ru.practicum.controller.RequestController;
 import ru.practicum.controller.UserController;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.event.*;
+import ru.practicum.dto.event.enums.SortType;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.request.StatusRequest;
 import ru.practicum.dto.user.UserDto;
@@ -139,7 +140,7 @@ public class EventServiceImpl implements EventService {
   public List<EventFullDto> getEvents(GetEventAdminRequest param) {
     log.info("Received request GET /admin/events with param {}", param);
 
-    List<EventFullDto> events = eventRepository.adminFindEvents(
+    List<Event> events = eventRepository.adminFindEvents(
             param.getUsers(),
             param.getStates(),
             param.getCategories(),
@@ -149,27 +150,17 @@ public class EventServiceImpl implements EventService {
             param.getSize()
     );
 
+    List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+    Map<Long, UserDto> initiators = getInitiators(events);
+    Map<Long, Long> confirmedRequests = getConfirmedRequests(eventIds);
+    setViews(events);
 
-    List<Long> initiatorIds = events.stream()
-            .map(event -> {
-              UserDto initiator = event.getInitiator();
-              return initiator != null ? initiator.getId() : null;
-            })
-            .filter(Objects::nonNull)
-            .distinct()
-            .toList();
-
-    Map<Long, UserDto> usersMap = initiatorIds.stream()
-            .map(id -> Map.entry(id, userController.getUser(id)))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-    events.forEach(event -> {
-      Long initiatorId = event.getInitiator().getId();
-      UserDto user = usersMap.get(initiatorId);
-      event.setInitiator(user);
-    });
-
-    return events;
+    return events.stream().map(event -> {
+      EventFullDto dto = EventMapper.toFullDto(event);
+      dto.setConfirmedRequests(confirmedRequests.getOrDefault(event.getId(), 0L).intValue());
+      dto.setInitiator(initiators.get(event.getInitiatorId()));
+      return dto;
+    }).collect(Collectors.toList());
   }
 
   /**
@@ -205,16 +196,64 @@ public class EventServiceImpl implements EventService {
             param.getRangeStart().isAfter(param.getRangeEnd())) {
       throw new BadRequestException("Start date should be before end date");
     }
-    return eventRepository.publicGetEvents(
+
+    List<Event> events = eventRepository.publicGetEvents(
             param.getText(),
             param.getCategories(),
             param.getPaid(),
             param.getRangeStart(),
             param.getRangeEnd(),
             param.getOnlyAvailable(),
-            param.getSort(),
+            param.getSort() != null ? param.getSort().name() : null,
             param.getFrom(),
             param.getSize());
+
+    List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+    Map<Long, UserDto> initiators = getInitiators(events);
+    Map<Long, Long> confirmedRequests = getConfirmedRequests(eventIds);
+    setViews(events);
+
+    List<EventShortDto> result = events.stream().map(event -> {
+      EventShortDto dto = EventMapper.toShortDto(event);
+      dto.setConfirmedRequests(confirmedRequests.getOrDefault(event.getId(), 0L).intValue());
+      dto.setInitiator(new UserShortDto(
+              initiators.get(event.getInitiatorId()).getId(),
+              initiators.get(event.getInitiatorId()).getName()
+      ).getId());
+      return dto;
+    }).collect(Collectors.toList());
+
+    if (param.getSort() != null && param.getSort().equals(SortType.VIEWS)) {
+      result.sort(Comparator.comparing(EventShortDto::getViews).reversed());
+    }
+
+    return result;
+  }
+
+  private Map<Long, UserDto> getInitiators(List<Event> events) {
+    List<Long> initiatorIds = events.stream()
+            .map(Event::getInitiatorId)
+            .distinct()
+            .collect(Collectors.toList());
+
+    return initiatorIds.stream()
+            .collect(Collectors.toMap(
+                    id -> id,
+                    userController::getUser
+            ));
+  }
+
+  private Map<Long, Long> getConfirmedRequests(List<Long> eventIds) {
+    if (eventIds.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    return requestController.getAllRequests(eventIds).stream()
+            .filter(request -> StatusRequest.CONFIRMED.name().equals(request.getStatus()))
+            .collect(Collectors.groupingBy(
+                    ParticipationRequestDto::getEvent,
+                    Collectors.counting()
+            ));
   }
 
   /**

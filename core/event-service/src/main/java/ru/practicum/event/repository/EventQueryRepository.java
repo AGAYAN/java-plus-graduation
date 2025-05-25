@@ -1,31 +1,30 @@
 package ru.practicum.event.repository;
 
-import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.EventShortDto;
-import ru.practicum.dto.event.enums.SortType;
+import ru.practicum.event.model.Event;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventQueryRepository {
 
-  List<EventFullDto> adminFindEvents(final List<Long> users,
-                                     final List<String> states,
-                                     final List<Long> categories,
-                                     final LocalDateTime rangeStart,
-                                     final LocalDateTime rangeEnd,
-                                     int from,
-                                     int size);
+    List<Event> adminFindEvents(List<Long> users,
+                                List<String> states,
+                                List<Long> categories,
+                                LocalDateTime rangeStart,
+                                LocalDateTime rangeEnd,
+                                int from,
+                                int size);
 
-  List<EventShortDto> publicGetEvents(final String text,
-                              final List<Long> categories,
-                              final Boolean paid,
-                              final LocalDateTime rangeStart,
-                              final LocalDateTime rangeEnd,
-                              final Boolean onlyAvailable,
-                              final SortType sort,
-                              final int from,
-                              final int size
-                                              );
+    List<Event> publicGetEvents(String text,
+                                List<Long> categories,
+                                Boolean paid,
+                                LocalDateTime rangeStart,
+                                LocalDateTime rangeEnd,
+                                Boolean onlyAvailable,
+                                String sort,
+                                int from,
+                                int size);
+
+
 
 }
