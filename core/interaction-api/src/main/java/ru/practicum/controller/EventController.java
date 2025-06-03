@@ -1,16 +1,13 @@
 package ru.practicum.controller;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.dto.event.UpdateEventUserRequest;
+
+import java.util.List;
+import java.util.Set;
 
 @FeignClient(name = "event-service")
 public interface EventController {
@@ -18,4 +15,6 @@ public interface EventController {
     @GetMapping("/events/{eventId}")
     EventFullDto getEventById(@PathVariable Long eventId);
 
+    @GetMapping(path = "/events")
+    List<EventFullDto> findEventsByIds(@RequestParam Set<Long> ids);
 }

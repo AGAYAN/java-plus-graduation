@@ -7,20 +7,10 @@
         <groupId>ru.practicum</groupId>
         <artifactId>explore-with-me</artifactId>
         <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>stats</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>stats-client</module>
-        <module>stats-dto</module>
-        <module>stats-server</module>
-        <module>serialization/proto</module>
-        <module>serialization/avro</module>
-        <module>collector</module>
-        <module>aggregator</module>
-        <module>analyzer</module>
-    </modules>
+    <artifactId>serialization</artifactId>
 
     <properties>
         <maven.compiler.source>22</maven.compiler.source>
@@ -28,4 +18,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>1.3.5</version>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
 </project>

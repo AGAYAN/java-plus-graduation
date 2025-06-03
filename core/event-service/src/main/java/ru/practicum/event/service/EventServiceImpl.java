@@ -207,7 +207,7 @@ public class EventServiceImpl implements EventService {
     List<Long> initiatorIds = events.stream()
             .map(Event::getInitiatorId)
             .distinct()
-            .collect(Collectors.toList());
+            .toList();
 
     return initiatorIds.stream()
             .collect(Collectors.toMap(
@@ -260,6 +260,13 @@ public class EventServiceImpl implements EventService {
     log.debug("Retrieving set of events by theirs IDs: {}.", eventIds);
     Objects.requireNonNull(eventIds);
     return eventIds.isEmpty() ? Set.of() : eventRepository.findAllDistinctByIdIn(eventIds);
+  }
+
+  @Override
+  public List<EventFullDto> findEventByIds(Set<Long> ids) {
+    return eventRepository.findAllByIdIn(ids).stream()
+            .map(EventMapper::toFullDto)
+            .toList();
   }
 
   /**

@@ -54,4 +54,6 @@ public interface EventService {
    */
   Set<Event> getEvents(Set<Long> events);
 
+  List<EventFullDto> findEventByIds(Set<Long> ids);
+
   }

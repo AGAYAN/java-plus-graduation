@@ -1,0 +1,53 @@
+server:
+  port: 6567
+
+grpc:
+  server:
+    port: 6566
+    enable: true
+
+spring:
+  application:
+    name: aggregator
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        serviceId: config-server
+      fail-fast: false
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+    hostname: localhost
+    instance-id: "${spring.application.name}:${server.port}"
+    lease-renewal-interval-in-seconds: 10
+    metadata-map:
+      grpcPort: 6566
+
+kafka:
+  topics:
+    actions: "stats.user-actions.v1"
+    similarity: "stats.events-similarity.v1"
+  bootstrap-servers: localhost:9092
+  key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+  value-deserializer: "aggregator.deserializer.UserAvroDeserializer"
+  key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
+  value-serializer: "aggregator.serializer.EventSimilarityAvroSerializer"
+  consumer-group-id: "groupAggregatorConsumer"
+  auto-offset-reset: "earliest"
+  ssl:
+    enabled: false
+logging:
+  level:
+    org.springframework.cloud.netflix.eureka: DEBUG
+    com.netflix.discovery: DEBUG

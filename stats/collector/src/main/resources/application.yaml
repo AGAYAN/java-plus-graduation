@@ -1,0 +1,48 @@
+server:
+  port: 8087
+
+grpc:
+  server:
+    port: 6565
+    enable-keep-alive: true
+
+spring:
+  application:
+    name: collector
+  config:
+    import: "configserver:"
+  cloud:
+    loadbalancer:
+      cache:
+        caffeine:
+          spec: maximumSize=100, expireAfterAccess=10m
+    config:
+      discovery:
+        enabled: true
+        serviceId: config-server
+      fail-fast: true
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+    properties:
+      schema.registry.url: http://localhost:8081
+      auto.register.schemas: true
+    topic:
+      user-actions: stats.user-actions.v1
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+    hostname: localhost
+    instance-id: "${spring.application.name}:${server.port}"
+    lease-renewal-interval-in-seconds: 20
+    metadata-map:
+      grpcPort: 6565
