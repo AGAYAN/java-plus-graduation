@@ -8,7 +8,7 @@ grpc:
 
 spring:
   application:
-    name: collector
+    name: stats-server
   config:
     import: "configserver:"
   cloud:
