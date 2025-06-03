@@ -1,0 +1,52 @@
+spring:
+  main:
+    banner-mode: off
+  datasource:
+    url: jdbc:postgresql://events-db:5432/events
+    username: postgres
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  sql:
+    init:
+      mode: always
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 50
+        failureRateThreshold: 50
+    instances:
+      user-service:
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowsType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      ewm-stats-server:
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowsType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      request-service:
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowsType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+ewm:
+  timeout:
+    admin: PT1H
+    user: PT2H
+server:
+  port: 0

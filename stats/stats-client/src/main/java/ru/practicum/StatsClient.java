@@ -9,11 +9,14 @@ import reactor.core.publisher.Mono;
 import org.springframework.http.HttpStatus;
 import ru.practicum.exception.StatsBadRequestException;
 
+import java.time.Duration;
+
 @Component
 @Slf4j
 public class StatsClient {
 
     private final WebClient webClient;
+
 
     public StatsClient(WebClient.Builder webClientBuilder, @Value("${stats.client.url}") String baseUrl) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
@@ -25,6 +28,7 @@ public class StatsClient {
                 .bodyValue(hit)
                 .retrieve()
                 .bodyToMono(Void.class)
+                .timeout(Duration.ofSeconds(30L))
                 .block();
     }
 

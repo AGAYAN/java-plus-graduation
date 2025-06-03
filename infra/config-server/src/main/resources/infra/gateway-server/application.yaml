@@ -1,0 +1,36 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: user_service_route
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/users/**
+
+        - id: event_service_category_route
+          uri: lb://event-service
+          predicates:
+            - Path=/admin/categories/**, /categories/**
+
+        - id: event_service_compilation_route
+          uri: lb://event-service
+          predicates:
+            - Path=/compilations/**, /admin/compilations/**
+
+        - id: event_service_route
+          uri: lb://event-service
+          predicates:
+            - Path=/admin/events/**, /users/{userId}/events, /users/{userId}/events/{eventId}, /events/**
+
+        - id: request_service_route
+          uri: lb://request-service
+          predicates:
+            - Path=/users/{userId}/events/{eventId}/requests, /users/{userId}/requests/**, /requests/**
+
+        - id: comment_service_route
+          uri: lb://comment-service
+          predicates:
+            - Path=/users/{userId}/subscriptions/**
