@@ -15,13 +15,13 @@ import java.util.Properties;
 @Configuration
 public class KafkaConfig {
 
-    @Value("${kafka.bootstrap-servers}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String servers;
 
-    @Value("${spring.kafka.producer.key-serializer}")
+    @Value("${spring.kafka.key-serializer}")
     private String keySerializer;
 
-    @Value("${kafka.value-serializer}")
+    @Value("${spring.kafka.value-serializer}")
     private String valueSerializer;
 
     @Bean
