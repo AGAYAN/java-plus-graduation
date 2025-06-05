@@ -14,7 +14,7 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 @RequiredArgsConstructor
 public class CollectorServiceImpl implements CollectorService {
 
-    private KafkaProducer<String, UserActionAvro> kafkaProducer;
+    private final KafkaProducer<String, UserActionAvro> kafkaProducer;
 
     @Value("${spring.kafka.topic.user-actions}")
     private String userActionsTopic;
