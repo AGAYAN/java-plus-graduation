@@ -1,4 +1,4 @@
-package ru.practicum.serializer;
+package ru.practicum.collector.serializer;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.io.BinaryEncoder;
@@ -7,9 +7,12 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.common.serialization.Serializer;
+import org.springframework.stereotype.Component;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+@Component
 @RequiredArgsConstructor
 public class CollectorSerializer implements Serializer<SpecificRecordBase> {
 

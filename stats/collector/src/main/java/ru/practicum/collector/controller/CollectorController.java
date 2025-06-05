@@ -1,4 +1,4 @@
-package ru.practicum.controller;
+package ru.practicum.collector.controller;
 
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +7,7 @@ import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.grpc.stats.action.UserActionControllerGrpc;
 import ru.practicum.grpc.stats.action.UserActionMessage;
-import ru.practicum.service.CollectorService;
+import ru.practicum.collector.service.CollectorService;
 
 import java.time.Instant;
 

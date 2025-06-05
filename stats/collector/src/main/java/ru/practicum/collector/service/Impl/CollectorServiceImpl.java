@@ -1,4 +1,4 @@
-package ru.practicum.service.Impl;
+package ru.practicum.collector.service.Impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,8 +6,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.practicum.collector.service.CollectorService;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-import ru.practicum.service.CollectorService;
 
 @Service
 @Slf4j

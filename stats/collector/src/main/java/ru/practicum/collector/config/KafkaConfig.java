@@ -1,4 +1,4 @@
-package ru.practicum.config;
+package ru.practicum.collector.config;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -32,5 +32,7 @@ public class KafkaConfig {
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer);
 
         return new KafkaProducer<>(properties);
+
     }
+
 }
