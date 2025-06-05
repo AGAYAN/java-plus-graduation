@@ -16,7 +16,7 @@ public class CollectorServiceImpl implements CollectorService {
 
     private KafkaProducer<String, UserActionAvro> kafkaProducer;
 
-    @Value("${kafka.topic.user-actions}")
+    @Value("${spring.kafka.topic.user-actions}")
     private String userActionsTopic;
 
     @Override
