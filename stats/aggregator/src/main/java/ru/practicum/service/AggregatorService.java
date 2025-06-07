@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class AggregatorService {
 
-    private final KafkaProducer<String, EventSimilarityAvro> kafkaProducer;
+    private final KafkaProducer<String, Object> kafkaProducer;
     private final KafkaConsumer<String, UserActionAvro> kafkaConsumer;
 
     @Value("${kafka.topics.actions}")

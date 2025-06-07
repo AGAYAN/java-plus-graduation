@@ -9,13 +9,14 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.util.Properties;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
+@Configuration
 public class KafkaConfig {
     @Value("${kafka.bootstrap-servers}")
     String server;
