@@ -42,7 +42,7 @@ kafka:
   key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
   value-deserializer: "aggregator.deserializer.UserAvroDeserializer"
   key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
-  value-serializer: "aggregator.serializer.EventSimilarityAvroSerializer"
+  value-serializer: "ru.practicum.serializer.AggregatorSerializer"
   consumer-group-id: "groupAggregatorConsumer"
   auto-offset-reset: "earliest"
   ssl:
