@@ -20,6 +20,7 @@ spring:
       retry:
         useRandomPolicy: true
         max-interval: 6000
+
 eureka:
   client:
     fetch-registry: true
@@ -40,13 +41,14 @@ kafka:
     similarity: "stats.events-similarity.v1"
   bootstrap-servers: localhost:9092
   key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
-  value-deserializer: "ru.practicum.config.deserializer.UserAvroDeserializer"
+  value-deserializer: "ru.practicum.deserializer.UserAvroDeserializer"
   key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
-  value-serializer: "ru.practicum.config.serializer.AggregatorSerializer"
+  value-serializer: "ru.practicum.serializer.AggregatorSerializer"
   consumer-group-id: "groupAggregatorConsumer"
   auto-offset-reset: "earliest"
   ssl:
     enabled: false
+
 logging:
   level:
     org.springframework.cloud.netflix.eureka: DEBUG
