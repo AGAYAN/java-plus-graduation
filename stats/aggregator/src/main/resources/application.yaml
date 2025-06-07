@@ -40,9 +40,9 @@ kafka:
     similarity: "stats.events-similarity.v1"
   bootstrap-servers: localhost:9092
   key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
-  value-deserializer: "ru.practicum.deserializer.UserAvroDeserializer"
+  value-deserializer: "ru.practicum.config.deserializer.UserAvroDeserializer"
   key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
-  value-serializer: "ru.practicum.serializer.AggregatorSerializer"
+  value-serializer: "ru.practicum.config.serializer.AggregatorSerializer"
   consumer-group-id: "groupAggregatorConsumer"
   auto-offset-reset: "earliest"
   ssl:
