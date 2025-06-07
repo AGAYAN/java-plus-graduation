@@ -7,10 +7,10 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -19,11 +19,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
 public class AggregatorService {
-    private KafkaProducer<String, EventSimilarityAvro> kafkaProducer;
-    private KafkaConsumer<String, UserActionAvro> kafkaConsumer;
+
+    private final KafkaProducer<String, EventSimilarityAvro> kafkaProducer;
+    private final KafkaConsumer<String, UserActionAvro> kafkaConsumer;
 
     @Value("${kafka.topics.actions}")
     private String actionTopic;
