@@ -9,7 +9,7 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-public class AggregatorDeserializer implements Deserializer<UserActionAvro> {
+public class UserAvroDeserializer implements Deserializer<UserActionAvro> {
     @Override
     public UserActionAvro deserialize(String s, byte[] bytes) {
         if (bytes == null || bytes.length == 0) {
