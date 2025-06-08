@@ -114,7 +114,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                             .stream()
                             .collect(Collectors.toMap(
                                     RecommendedEvent::getId,
-                                    RecommendedEvent::getScore
+                                    RecommendedEvent::getSimilarityScore
                             ));
 
                     Map<Long, Double> eventsAndRatings = eventController
