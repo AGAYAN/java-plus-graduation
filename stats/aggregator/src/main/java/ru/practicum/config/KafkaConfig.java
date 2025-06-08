@@ -18,19 +18,19 @@ import java.util.Properties;
 @Configuration
 public class KafkaConfig {
     @Value("${kafka.bootstrap-servers}")
-    String server;
+    private String server;
     @Value("${kafka.key-serializer}")
-    String keySerializer;
+    private String keySerializer;
     @Value("${kafka.value-serializer}")
-    String valueSerializer;
+    private String valueSerializer;
     @Value("${kafka.key-deserializer}")
-    String keyDeserializer;
+    private String keyDeserializer;
     @Value("${kafka.value-deserializer}")
-    String valueDeserializer;
+    private String valueDeserializer;
     @Value("${kafka.consumer-group-id}")
-    String consumerGroupId;
+    private String consumerGroupId;
     @Value("${kafka.auto-offset-reset}")
-    String autoOffsetReset;
+    private String autoOffsetReset;
 
     @Bean
     public KafkaProducer<String, Object> kafkaProducer() {
