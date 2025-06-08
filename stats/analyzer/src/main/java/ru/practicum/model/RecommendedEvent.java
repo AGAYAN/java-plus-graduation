@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 public class RecommendedEvent {
 
     private Long id;
-    private Double score;
+    private Double similarityScore;
 
-    public RecommendedEvent(Long eventId, double maxResult) {
+    public RecommendedEvent(Long eventId, Double similarityScore) {
         this.id = eventId;
-        this.score = maxResult;
+        this.similarityScore = similarityScore;
     }
 
 }
