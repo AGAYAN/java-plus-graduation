@@ -13,7 +13,7 @@ import ru.practicum.service.AnalyzeService;
 @SpringBootApplication
 @EnableFeignClients(basePackages = {"interaction.controller", "ewm.client"})
 @ConfigurationPropertiesScan
-@EnableJpaRepositories("analyzer.repository")
+@EnableJpaRepositories("ru.practicum.repository")
 @EnableDiscoveryClient
 @EntityScan("analyzer.model")
 public class AnalyzerApplication {
