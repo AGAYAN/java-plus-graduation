@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Entity
 @RequiredArgsConstructor
 @Table(name = "action")
 public class UserAction {

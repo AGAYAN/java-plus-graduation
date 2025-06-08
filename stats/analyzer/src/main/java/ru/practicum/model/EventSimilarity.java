@@ -2,6 +2,7 @@ package ru.practicum.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@RequiredArgsConstructor
 @Table(name = "similarities")
 public class EventSimilarity {
 
