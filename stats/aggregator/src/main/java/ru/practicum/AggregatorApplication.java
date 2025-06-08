@@ -9,8 +9,11 @@ import ru.practicum.service.AggregatorService;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
+@EnableDiscoveryClient
 public class AggregatorApplication {
     public static void main(String[] args) {
-        SpringApplication.run(AggregatorApplication.class, args);
+        ConfigurableApplicationContext context = SpringApplication.run(AggregatorApplication.class, args);
+        AggregatorService service = context.getBean(AggregatorService.class);
+        service.startProcessing();
     }
 }
