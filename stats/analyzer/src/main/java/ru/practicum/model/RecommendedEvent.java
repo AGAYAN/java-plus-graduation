@@ -1,6 +1,8 @@
 package ru.practicum.model;
 
-import lombok.*;
+import lombok.Setter;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Setter
 @Getter
