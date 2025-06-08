@@ -2,16 +2,13 @@ package ru.practicum.service;
 
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 import ru.practicum.controller.EventController;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
@@ -22,7 +19,7 @@ import ru.practicum.grpc.stats.recommendation.RecommendationsControllerGrpc;
 import ru.practicum.model.EventSimilarity;
 import ru.practicum.model.RecommendedEvent;
 import ru.practicum.model.UserAction;
-import ru.practicum.repository.EventSimilartyRepostiory;
+import ru.practicum.repository.EventSimilarityRepository;
 import ru.practicum.repository.UserActionRepository;
 
 import java.time.Duration;
@@ -40,7 +37,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
     private static final Double LIKE_WEIGHT = 1.0;
     private static final long NEIGHBORS_COUNT = 10;
 
-    private final EventSimilartyRepostiory eventSimilartyRepostiory;
+    private final EventSimilarityRepository eventSimilarityRepository;
     private final UserActionRepository userActionRepository;
     private final EventController eventController;
 
@@ -105,14 +102,14 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
             if (!interactedEventIds.isEmpty()) {
                 List<Long> notInteractedEventIds = userActionRepository.findNotInteractedEventIdsByUserId(userId);
 
-                List<Long> mostSimilarEventsIds = eventSimilartyRepostiory.findMostSimilarEventsIds(
+                List<Long> mostSimilarEventsIds = eventSimilarityRepository.findMostSimilarEventsIds(
                         interactedEventIds,
                         notInteractedEventIds,
                         pageable);
 
                 for (int i = 0; i < mostSimilarEventsIds.size()
                         && i < NEIGHBORS_COUNT; i++) {
-                    Map<Long, Double> eventsAndSimilarities = eventSimilartyRepostiory
+                    Map<Long, Double> eventsAndSimilarities = eventSimilarityRepository
                             .findSimilarEvents(mostSimilarEventsIds.get(i), interactedEventIds.stream().toList())
                             .stream()
                             .collect(Collectors.toMap(
@@ -162,7 +159,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
 
         List<Long> eventsByUserId = userActionRepository.findEventIdsByUserId(request.getUserId());
         Pageable pageable = PageRequest.of(0, request.getMaxResults());
-        List<EventSimilarity> eventSimilarities = eventSimilartyRepostiory.findSimilaritiesExcludingInteracted(
+        List<EventSimilarity> eventSimilarities = eventSimilarityRepository.findSimilaritiesExcludingInteracted(
                 request.getEventId(),
                 eventsByUserId.stream().toList(),
                 pageable).stream().toList();

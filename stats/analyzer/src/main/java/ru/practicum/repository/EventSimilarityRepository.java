@@ -10,7 +10,7 @@ import ru.practicum.model.RecommendedEvent;
 
 import java.util.List;
 
-public interface EventSimilartyRepostiory extends JpaRepository<EventSimilarity, Long> {
+public interface EventSimilarityRepository extends JpaRepository<EventSimilarity, Long> {
 
     @Query("SELECT e FROM EventSimilarity e " +
             "WHERE (e.eventIdA = :eventId OR e.eventIdB = :eventId) " +
