@@ -11,15 +11,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import ru.practicum.service.AnalyzeService;
 
 @SpringBootApplication
-@EnableFeignClients(basePackages = {"interaction.controller", "ewm.client"})
 @ConfigurationPropertiesScan
-@EnableJpaRepositories("ru.practicum.repository")
-@EnableDiscoveryClient
-@EntityScan("analyzer.model")
 public class AnalyzerApplication {
     public static void main(String[] args) {
-        ConfigurableApplicationContext context = SpringApplication.run(AnalyzerApplication.class, args);
-        AnalyzeService analyzer = context.getBean(AnalyzeService.class);
-        analyzer.start();
+        SpringApplication.run(AnalyzerApplication.class, args);
     }
 }
