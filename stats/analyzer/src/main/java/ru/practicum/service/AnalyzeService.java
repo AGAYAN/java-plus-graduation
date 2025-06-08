@@ -62,8 +62,8 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                 EventSimilarity similarity = new EventSimilarity();
                 similarity.setEventIdA(eventSimilarityAvro.getEventA());
                 similarity.setEventIdB(eventSimilarityAvro.getEventB());
-                similarity.setMaxResult(eventSimilarityAvro.getScore());
-                similarity.setTime(eventSimilarityAvro
+                similarity.setSimilarityScore(eventSimilarityAvro.getScore());
+                similarity.setCalculatedAt(eventSimilarityAvro
                         .getTimestamp()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime());
 
@@ -170,7 +170,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                     ? similarity.getEventIdA() : similarity.getEventIdB();
             RecommendationMessage.RecommendedEventProto eventProto = RecommendationMessage.RecommendedEventProto.newBuilder()
                     .setEventId(tempSimilarEventId)
-                    .setScore(similarity.getMaxResult())
+                    .setScore(similarity.getSimilarityScore())
                     .build();
             responseObserver.onNext(eventProto);
         }

@@ -18,10 +18,10 @@ public class EventSimilarity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "event_id_a", nullable = false)
+    @Column(name = "event_id_a")
     private Long eventIdA;
 
-    @Column(name = "event_id_b", nullable = false)
+    @Column(name = "event_id_b")
     private Long eventIdB;
 
     @Column(name = "similarity_score", nullable = false)
