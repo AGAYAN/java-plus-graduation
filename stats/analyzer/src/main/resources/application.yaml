@@ -48,17 +48,17 @@ eureka:
 
 kafka:
   topics:
-    user-actions: "stats.user-actions.v1"
-    events-similarity: "stats.events-similarity.v1"
+    actions: "stats.user-actions.v1"
+    similarity: "stats.events-similarity.v1"
   bootstrap-servers: localhost:9092
-  consumer:
-    group-id: "analyzer-group"
-    auto-offset-reset: earliest
-    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-  properties:
-    schema.registry.url: http://localhost:8081
-    specific.avro.reader: true
+  key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+  value-deserializer-similarity: "analyzer.deserializer.EventAvroDeserializer"
+  value-deserializer-actions: "analyzer.deserializer.UserAvroDeserializer"
+  consumer-analyzer-actions-group-id: "groupAnalyzerActionsConsumer"
+  consumer-analyzer-similarity-group-id: "groupAnalyzerSimilarityConsumer"
+  auto-offset-reset: "earliest"
+  ssl:
+    enabled: false
 
 logging:
   level:

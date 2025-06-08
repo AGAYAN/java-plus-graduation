@@ -38,7 +38,6 @@ public class KafkaConfig {
     @Value("${kafka.auto-offset-reset}")
     private String autoOffsetReset;
 
-
     private Properties propertiesConsumer() {
 
         Properties props = new Properties();
