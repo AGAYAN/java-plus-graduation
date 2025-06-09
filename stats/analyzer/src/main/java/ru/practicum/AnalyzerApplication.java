@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import ru.practicum.service.AnalyzeService;
 
 @SpringBootApplication
-@EnableFeignClients(basePackages = {"interaction.controller", "ewm.client"})
+@EnableFeignClients(basePackages = "ru.practicum")
 @ConfigurationPropertiesScan
 @EnableJpaRepositories("ru.practicum.repository")
 @EnableDiscoveryClient
