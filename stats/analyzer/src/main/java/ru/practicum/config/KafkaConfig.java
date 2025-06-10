@@ -1,7 +1,5 @@
 package ru.practicum.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -14,8 +12,6 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.util.Properties;
 
-@Getter
-@Setter
 @Configuration
 public class KafkaConfig {
 
@@ -46,34 +42,24 @@ public class KafkaConfig {
     @Value("${kafka.auto-offset-reset}")
     private String autoOffsetReset;
 
-    private Properties propertiesConsumer() {
+    private Properties buildConsumerProperties(String valueDeserializer, String groupId) {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, server);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, eventDeserializer);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, similarityConsumerGroupId);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         return props;
     }
 
     @Bean
-    public KafkaConsumer<String, EventSimilarityAvro> baseConsumer() {
-        return new KafkaConsumer<>(propertiesConsumer());
-    }
-
-    private Properties propertiesActionsConsumer() {
-        Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, server);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, userActionDeserializer);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, actionsConsumerGroupId);
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-        return props;
+    public KafkaConsumer<String, EventSimilarityAvro> similarityConsumer() {
+        return new KafkaConsumer<>(buildConsumerProperties(eventDeserializer, similarityConsumerGroupId));
     }
 
     @Bean
     public KafkaConsumer<String, UserActionAvro> actionsConsumer() {
-        return new KafkaConsumer<>(propertiesActionsConsumer());
+        return new KafkaConsumer<>(buildConsumerProperties(userActionDeserializer, actionsConsumerGroupId));
     }
 
     @Bean
