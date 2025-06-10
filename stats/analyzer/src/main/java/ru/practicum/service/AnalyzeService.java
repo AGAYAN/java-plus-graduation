@@ -41,6 +41,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
     private final UserActionRepository userActionRepository;
     private final EventController eventController;
 
+    // тут исравить ошибку
     private final KafkaConsumer<String, EventSimilarityAvro> similarityKafkaConsumer;
     private final KafkaConsumer<String, UserActionAvro> actionsKafkaConsumer;
 
