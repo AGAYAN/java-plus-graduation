@@ -51,9 +51,6 @@ kafka:
     actions: "stats.user-actions.v1"
     similarity: "stats.events-similarity.v1"
   bootstrap-servers: localhost:9092
-  key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
-  value-serializer: "io.confluent.kafka.serializers.KafkaAvroSerializer"
-  schema-registry-url: "http://localhost:8081"
   key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
   value-deserializer-similarity: "analyzer.deserializer.EventAvroDeserializer"
   value-deserializer-actions: "analyzer.deserializer.UserAvroDeserializer"
@@ -62,6 +59,7 @@ kafka:
   auto-offset-reset: "earliest"
   ssl:
     enabled: false
+
 
 logging:
   level:
