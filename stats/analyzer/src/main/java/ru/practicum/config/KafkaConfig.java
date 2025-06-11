@@ -7,6 +7,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
@@ -42,6 +43,9 @@ public class KafkaConfig {
     @Value("${kafka.auto-offset-reset}")
     private String autoOffsetReset;
 
+    @Value("${kafka.schema-registry-url:}")
+    private String schemaRegistryUrl;
+
     private Properties buildConsumerProperties(String valueDeserializer, String groupId) {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, server);
@@ -68,6 +72,11 @@ public class KafkaConfig {
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, server);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer);
+
+        if (StringUtils.hasText(schemaRegistryUrl)) {
+            props.put("schema.registry.url", schemaRegistryUrl);
+        }
+
         return new KafkaProducer<>(props);
     }
 }
