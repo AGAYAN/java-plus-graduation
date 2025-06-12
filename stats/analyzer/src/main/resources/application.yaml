@@ -52,8 +52,8 @@ kafka:
     similarity: "stats.events-similarity.v1"
   bootstrap-servers: localhost:9092
   key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
-  value-deserializer-similarity: "analyzer.deserializer.EventAvroDeserializer"
-  value-deserializer-actions: "analyzer.deserializer.UserAvroDeserializer"
+  value-deserializer-similarity: "ru.practicum.deserializer.EventAvroDeserializer"
+  value-deserializer-actions: "ru.practicum.deserializer.UserAvroDeserializer"
   consumer-analyzer-actions-group-id: "groupAnalyzerActionsConsumer"
   consumer-analyzer-similarity-group-id: "groupAnalyzerSimilarityConsumer"
   auto-offset-reset: "earliest"
