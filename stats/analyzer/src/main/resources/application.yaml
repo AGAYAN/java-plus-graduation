@@ -12,8 +12,6 @@ spring:
   config:
     import: "configserver:"
   cloud:
-    compatibility-verifier:
-      enabled: false
     config:
       discovery:
         enabled: true
