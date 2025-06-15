@@ -172,9 +172,9 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
     public void getInteractionsCount(RecommendationMessage.InteractionsCountRequestProto request,
                                      StreamObserver<RecommendationMessage.RecommendedEventProto> responseObserver) {
         request.getEventIdList().forEach(eventId -> {
-            long likeCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "LIKE");
-            long registerCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "REGISTER");
-            long viewCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "VIEW");
+            long likeCount = userActionRepository.countDistinctUsersByEventIdAndActionType(eventId, "LIKE");
+            long registerCount = userActionRepository.countDistinctUsersByEventIdAndActionType(eventId, "REGISTER");
+            long viewCount = userActionRepository.countDistinctUsersByEventIdAndActionType(eventId, "VIEW");
 
             double score = likeCount * LIKE_WEIGHT
                     + registerCount * REGISTER_WEIGHT

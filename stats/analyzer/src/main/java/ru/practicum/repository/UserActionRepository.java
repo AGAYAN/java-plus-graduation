@@ -10,8 +10,8 @@ import ru.practicum.model.UserAction;
 import java.util.List;
 
 public interface UserActionRepository extends JpaRepository<UserAction, Long> {
-    @Query("SELECT COUNT(ua) FROM UserAction ua WHERE ua.eventId = :eventId AND ua.action = :actionType")
-    long countActionsByEventIdAndActionType(@Param("eventId") long eventId, @Param("actionType") String actionType);
+    @Query("SELECT COUNT(DISTINCT ua.userId) FROM UserAction ua WHERE ua.eventId = :eventId AND ua.action = :actionType")
+    long countDistinctUsersByEventIdAndActionType(@Param("eventId") long eventId, @Param("actionType") String actionType);
 
     @Query("SELECT DISTINCT a.eventId FROM UserAction a WHERE a.userId = :uid")
     List<Long> findEventIdsByUserId(@Param("uid") Long uid);
