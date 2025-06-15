@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.controller.EventController;
@@ -57,7 +58,6 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
 
         while (true) {
             ConsumerRecords<String, EventSimilarityAvro> similarityRecords = similarityKafkaConsumer.poll(Duration.ofMillis(1000));
-
             for (ConsumerRecord<String, EventSimilarityAvro> record : similarityRecords) {
                 EventSimilarityAvro eventSimilarityAvro = record.value();
                 EventSimilarity similarity = new EventSimilarity();
@@ -67,13 +67,11 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                 similarity.setCalculatedAt(eventSimilarityAvro
                         .getTimestamp()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime());
-
-                eventSimilarityRepository.save(similarity);
+                eventSimilarityRepository.save(similarity); // ✅ фикс
             }
             similarityKafkaConsumer.commitSync();
 
             ConsumerRecords<String, UserActionAvro> actionRecords = actionsKafkaConsumer.poll(Duration.ofMillis(1000));
-
             for (ConsumerRecord<String, UserActionAvro> record : actionRecords) {
                 UserActionAvro userActionAvro = record.value();
                 UserAction action = new UserAction();
@@ -83,17 +81,17 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                 action.setTime(userActionAvro
                         .getTimestamp()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime());
-                userActionRepository.save(action);
+                userActionRepository.save(action); // ✅ фикс
             }
             actionsKafkaConsumer.commitSync();
         }
     }
+
     @Override
     public void getRecommendationsForUser(RecommendationMessage.UserPredictionsRequestProto request,
                                           StreamObserver<RecommendationMessage.RecommendedEventProto> responseObserver) {
         long userId = request.getUserId();
         int maxResults = request.getMaxResults();
-
         Pageable pageable = PageRequest.of(0, maxResults);
 
         try {
@@ -109,43 +107,37 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                         notInteractedEventIds,
                         pageable);
 
-                for (int i = 0; i < mostSimilarEventsIds.size()
-                        && i < NEIGHBORS_COUNT; i++) {
+                for (int i = 0; i < mostSimilarEventsIds.size() && i < NEIGHBORS_COUNT; i++) {
                     Map<Long, Double> eventsAndSimilarities = eventSimilarityRepository
-                            .findSimilarEvents(mostSimilarEventsIds.get(i), interactedEventIds.stream().toList())
+                            .findSimilarEvents(mostSimilarEventsIds.get(i), interactedEventIds)
                             .stream()
                             .collect(Collectors.toMap(
                                     RecommendedEvent::getId,
-                                    RecommendedEvent::getSimilarityScore
-                            ));
+                                    RecommendedEvent::getSimilarityScore));
 
                     Map<Long, Double> eventsAndRatings = eventController
                             .findEventsByIds(eventsAndSimilarities.keySet())
                             .stream()
                             .collect(Collectors.toMap(
                                     EventFullDto::getId,
-                                    EventFullDto::getRating
-                            ));
+                                    EventFullDto::getRating));
 
                     double weightedMarksSum = 0.0;
                     for (Long eventId : eventsAndSimilarities.keySet()) {
-                        weightedMarksSum += eventsAndSimilarities.get(eventId) * eventsAndRatings.get(eventId);
+                        weightedMarksSum += eventsAndSimilarities.get(eventId) * eventsAndRatings.getOrDefault(eventId, 0.0);
                     }
 
-                    double sumSimilarities = eventsAndSimilarities
-                            .values()
-                            .stream()
+                    double sumSimilarities = eventsAndSimilarities.values().stream()
                             .mapToDouble(Double::doubleValue)
                             .sum();
 
-                    double result = weightedMarksSum / sumSimilarities;
+                    double result = sumSimilarities != 0 ? weightedMarksSum / sumSimilarities : 0.0;
 
                     RecommendationMessage.RecommendedEventProto event = RecommendationMessage.RecommendedEventProto.newBuilder()
                             .setEventId(mostSimilarEventsIds.get(i))
                             .setScore(result)
                             .build();
                     responseObserver.onNext(event);
-
                 }
             }
         } catch (Exception e) {
@@ -158,18 +150,15 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
     @Override
     public void getSimilarEvents(RecommendationMessage.SimilarEventsRequestProto request,
                                  StreamObserver<RecommendationMessage.RecommendedEventProto> responseObserver) {
-
         List<Long> eventsByUserId = userActionRepository.findEventIdsByUserId(request.getUserId());
         Pageable pageable = PageRequest.of(0, request.getMaxResults());
-        List<EventSimilarity> eventSimilarities = eventSimilarityRepository.findSimilaritiesExcludingInteracted(
-                request.getEventId(),
-                eventsByUserId.stream().toList(),
-                pageable).stream().toList();
+        Page<EventSimilarity> eventSimilarities = eventSimilarityRepository.findSimilaritiesExcludingInteracted(
+                request.getEventId(), eventsByUserId, pageable);
 
-        long tempSimilarEventId;
         for (EventSimilarity similarity : eventSimilarities) {
-            tempSimilarEventId = similarity.getEventIdA() == request.getEventId()
-                    ? similarity.getEventIdA() : similarity.getEventIdB();
+            long tempSimilarEventId = similarity.getEventIdA() == request.getEventId()
+                    ? similarity.getEventIdB()
+                    : similarity.getEventIdA();
             RecommendationMessage.RecommendedEventProto eventProto = RecommendationMessage.RecommendedEventProto.newBuilder()
                     .setEventId(tempSimilarEventId)
                     .setScore(similarity.getSimilarityScore())
@@ -183,25 +172,14 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
     public void getInteractionsCount(RecommendationMessage.InteractionsCountRequestProto request,
                                      StreamObserver<RecommendationMessage.RecommendedEventProto> responseObserver) {
         request.getEventIdList().forEach(eventId -> {
-
-            double likeCount = userActionRepository.countUserIdsWithSpecificActionOnly(
-                    eventId,
-                    ActionTypeAvro.LIKE.toString(),
-                    List.of(ActionTypeAvro.VIEW.toString(), ActionTypeAvro.REGISTER.toString()));
-
-            double registerCount = userActionRepository.countUserIdsWithSpecificActionOnly(
-                    eventId,
-                    ActionTypeAvro.REGISTER.toString(),
-                    List.of(ActionTypeAvro.VIEW.toString(), ActionTypeAvro.LIKE.toString()));
-
-            double viewCount = userActionRepository.countUserIdsWithSpecificActionOnly(
-                    eventId,
-                    ActionTypeAvro.VIEW.toString(),
-                    List.of(ActionTypeAvro.LIKE.toString(), ActionTypeAvro.REGISTER.toString()));
+            long likeCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "LIKE");
+            long registerCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "REGISTER");
+            long viewCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "VIEW");
 
             double score = likeCount * LIKE_WEIGHT
                     + registerCount * REGISTER_WEIGHT
                     + viewCount * VIEW_WEIGHT;
+
             RecommendationMessage.RecommendedEventProto eventProto = RecommendationMessage
                     .RecommendedEventProto.newBuilder()
                     .setEventId(eventId)
