@@ -67,6 +67,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                 similarity.setCalculatedAt(eventSimilarityAvro
                         .getTimestamp()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime());
+                eventSimilarityRepository.save(similarity);
 
             }
             similarityKafkaConsumer.commitSync();
@@ -182,25 +183,14 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
     public void getInteractionsCount(RecommendationMessage.InteractionsCountRequestProto request,
                                      StreamObserver<RecommendationMessage.RecommendedEventProto> responseObserver) {
         request.getEventIdList().forEach(eventId -> {
-
-            double likeCount = userActionRepository.countUserIdsWithSpecificActionOnly(
-                    eventId,
-                    ActionTypeAvro.LIKE.toString(),
-                    List.of(ActionTypeAvro.VIEW.toString(), ActionTypeAvro.REGISTER.toString()));
-
-            double registerCount = userActionRepository.countUserIdsWithSpecificActionOnly(
-                    eventId,
-                    ActionTypeAvro.REGISTER.toString(),
-                    List.of(ActionTypeAvro.VIEW.toString(), ActionTypeAvro.LIKE.toString()));
-
-            double viewCount = userActionRepository.countUserIdsWithSpecificActionOnly(
-                    eventId,
-                    ActionTypeAvro.VIEW.toString(),
-                    List.of(ActionTypeAvro.LIKE.toString(), ActionTypeAvro.REGISTER.toString()));
+            long likeCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "LIKE");
+            long registerCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "REGISTER");
+            long viewCount = userActionRepository.countActionsByEventIdAndActionType(eventId, "VIEW");
 
             double score = likeCount * LIKE_WEIGHT
                     + registerCount * REGISTER_WEIGHT
                     + viewCount * VIEW_WEIGHT;
+
             RecommendationMessage.RecommendedEventProto eventProto = RecommendationMessage
                     .RecommendedEventProto.newBuilder()
                     .setEventId(eventId)
