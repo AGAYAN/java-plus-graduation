@@ -82,7 +82,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                 action.setTime(userActionAvro
                         .getTimestamp()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime());
-
+                userActionRepository.save(action);
             }
             actionsKafkaConsumer.commitSync();
         }
