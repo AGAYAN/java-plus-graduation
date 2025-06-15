@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @RequiredArgsConstructor
-@Table(name = "action")
+@Table(name = "actions")
 public class UserAction {
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "user_id")
@@ -27,6 +27,6 @@ public class UserAction {
     @Column(name = "action")
     private String action;
 
-    @Column(name = "time")
+    @Column(name = "created_at")
     private LocalDateTime time;
 }

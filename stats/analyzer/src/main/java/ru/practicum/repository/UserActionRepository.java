@@ -25,9 +25,7 @@ public interface UserActionRepository extends JpaRepository<UserAction, Long> {
     @Query("SELECT DISTINCT a.eventId FROM UserAction a WHERE a.userId = :uid")
     List<Long> findEventIdsByUserId(@Param("uid") Long uid);
 
-    @Query("SELECT a.eventId " +
-            "FROM UserAction a WHERE a.userId = :userId " +
-            "ORDER BY a.time")
+    @Query("SELECT a.eventId FROM UserAction a WHERE a.userId = :userId ORDER BY a.time")
     Page<Long> findActionsByUserIdOrderByTimestamp(
             @Param("userId") Long userId,
             Pageable pageable
