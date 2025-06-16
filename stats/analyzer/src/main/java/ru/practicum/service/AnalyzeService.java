@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.controller.EventController;
 import ru.practicum.dto.event.EventFullDto;
-import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.grpc.stats.recommendation.RecommendationMessage;
@@ -171,14 +170,29 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
     @Override
     public void getInteractionsCount(RecommendationMessage.InteractionsCountRequestProto request,
                                      StreamObserver<RecommendationMessage.RecommendedEventProto> responseObserver) {
-        request.getEventIdList().forEach(eventId -> {
-            long likeCount = userActionRepository.countDistinctUsersByEventIdAndActionType(eventId, "LIKE");
-            long registerCount = userActionRepository.countDistinctUsersByEventIdAndActionType(eventId, "REGISTER");
-            long viewCount = userActionRepository.countDistinctUsersByEventIdAndActionType(eventId, "VIEW");
 
-            double score = likeCount * LIKE_WEIGHT
-                    + registerCount * REGISTER_WEIGHT
-                    + viewCount * VIEW_WEIGHT;
+        Map<String, Double> actionWeights = Map.of(
+                "VIEW", VIEW_WEIGHT,
+                "REGISTER", REGISTER_WEIGHT,
+                "LIKE", LIKE_WEIGHT
+        );
+
+        request.getEventIdList().forEach(eventId -> {
+            List<UserAction> actions = userActionRepository.findByEventId(eventId);
+
+            Map<Long, Double> userMaxWeights = actions.stream()
+                    .collect(Collectors.groupingBy(
+                            UserAction::getUserId,
+                            Collectors.collectingAndThen(
+                                    Collectors.mapping(
+                                            a -> actionWeights.getOrDefault(a.getAction(), 0.0),
+                                            Collectors.maxBy(Double::compare)
+                                    ),
+                                    opt -> opt.orElse(0.0)
+                            )
+                    ));
+
+            double score = userMaxWeights.values().stream().mapToDouble(Double::doubleValue).sum();
 
             RecommendationMessage.RecommendedEventProto eventProto = RecommendationMessage
                     .RecommendedEventProto.newBuilder()
@@ -187,6 +201,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                     .build();
             responseObserver.onNext(eventProto);
         });
+
         responseObserver.onCompleted();
     }
 }
