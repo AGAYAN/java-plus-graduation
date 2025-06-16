@@ -67,7 +67,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                 similarity.setCalculatedAt(eventSimilarityAvro
                         .getTimestamp()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime());
-                eventSimilarityRepository.save(similarity); // ✅ фикс
+                eventSimilarityRepository.save(similarity);
             }
             similarityKafkaConsumer.commitSync();
 
@@ -81,7 +81,7 @@ public class AnalyzeService extends RecommendationsControllerGrpc.Recommendation
                 action.setTime(userActionAvro
                         .getTimestamp()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime());
-                userActionRepository.save(action); // ✅ фикс
+                userActionRepository.save(action);
             }
             actionsKafkaConsumer.commitSync();
         }
