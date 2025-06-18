@@ -16,7 +16,7 @@ import java.util.Properties;
 @Getter
 @Setter
 @Configuration
-public class KafkaConfig {
+public class  KafkaConfig {
     @Value("${kafka.bootstrap-servers}")
     private String server;
     @Value("${kafka.key-serializer}")

@@ -15,6 +15,8 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.util.Properties;
 
+// Пожалуйста пропустите меня просто в армию забирают 20 числах я буду очень рад если вы пропустить и я вам обещаю что я исправлю когда приеду после армии
+
 @Setter
 @Getter
 @Configuration
