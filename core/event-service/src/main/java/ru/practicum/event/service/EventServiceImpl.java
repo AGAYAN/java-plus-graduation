@@ -309,11 +309,11 @@ public class EventServiceImpl implements EventService {
 
     log.debug("Calling StatsClient with parameters: start={}, end={}, uris={}, unique={}.",
         start, end, Arrays.toString(uris), true);
-    final Map<String, Long> views = Arrays.stream(statsClient.getStats(start, end, uris, true))
-        .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits));
-
-    events.forEach(event ->
-        event.setViews(views.getOrDefault(buildEventUri(event.getId()), 0L)));
+//    final Map<String, Long> views = Arrays.stream(statsClient.getStats(start, end, uris, true))
+//        .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits));
+//
+//    events.forEach(event ->
+//        event.setViews(views.getOrDefault(buildEventUri(event.getId()), 0L)));
     log.debug("Views has set successfully.");
 
   }
