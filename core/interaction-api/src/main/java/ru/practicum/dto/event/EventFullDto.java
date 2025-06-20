@@ -65,12 +65,14 @@ public class EventFullDto {
 
   private Long views;
 
+  private Double rating;
+
   public EventFullDto(String annotation, CategoryDto category, Integer confirmedRequests,
                       LocalDateTime createdOn,
                       String description, LocalDateTime eventDate, Long id, UserDto initiator,
                       Location location, Boolean paid, Integer participantLimit,
                       LocalDateTime publishedOn,
-                      Boolean requestModeration, String state, String title) {
+                      Boolean requestModeration, String state, String title, Double rating) {
     this.annotation = annotation;
     this.category = category;
     this.confirmedRequests = confirmedRequests;
@@ -86,6 +88,7 @@ public class EventFullDto {
     this.requestModeration = requestModeration;
     this.state = state;
     this.title = title;
+    this.rating = rating;
   }
 
 

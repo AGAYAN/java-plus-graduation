@@ -1,0 +1,68 @@
+server:
+  port: 6589
+
+grpc:
+  server:
+    port: 6588
+    enable-keep-alive: true
+
+spring:
+  application:
+    name: analyzer
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
+      fail-fast: true
+      retry:
+        use-random: true
+        max-interval: 6000
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/analyzer_db
+    username: postgres
+    password: admin
+    driver-class-name: org.postgresql.Driver
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    hostname: localhost
+    instance-id: "${spring.application.name}:${server.port}"
+    lease-renewal-interval-in-seconds: 10
+    metadata-map:
+      grpcPort: 6588
+
+kafka:
+  topics:
+    actions: "stats.user-actions.v1"
+    similarity: "stats.events-similarity.v1"
+  bootstrap-servers: localhost:9092
+  key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+  value-deserializer-similarity: "ru.practicum.deserializer.EventAvroDeserializer"
+  value-deserializer-actions: "ru.practicum.deserializer.UserAvroDeserializer"
+  consumer-analyzer-actions-group-id: "groupAnalyzerActionsConsumer"
+  consumer-analyzer-similarity-group-id: "groupAnalyzerSimilarityConsumer"
+  auto-offset-reset: "earliest"
+  ssl:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    org.apache.kafka: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG
+    com.netflix.discovery: DEBUG
+    ru.practicum: DEBUG

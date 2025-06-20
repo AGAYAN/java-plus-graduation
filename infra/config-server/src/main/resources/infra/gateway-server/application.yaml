@@ -34,3 +34,8 @@ spring:
           uri: lb://comment-service
           predicates:
             - Path=/users/{userId}/subscriptions/**
+
+        - id: recommendation_service
+          uri: ld://event-service
+          predicates:
+            - Path=/events/recommendations

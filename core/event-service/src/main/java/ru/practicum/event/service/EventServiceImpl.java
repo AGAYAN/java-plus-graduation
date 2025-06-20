@@ -207,7 +207,7 @@ public class EventServiceImpl implements EventService {
     List<Long> initiatorIds = events.stream()
             .map(Event::getInitiatorId)
             .distinct()
-            .collect(Collectors.toList());
+            .toList();
 
     return initiatorIds.stream()
             .collect(Collectors.toMap(
@@ -262,6 +262,13 @@ public class EventServiceImpl implements EventService {
     return eventIds.isEmpty() ? Set.of() : eventRepository.findAllDistinctByIdIn(eventIds);
   }
 
+  @Override
+  public List<EventFullDto> findEventByIds(Set<Long> ids) {
+    return eventRepository.findAllByIdIn(ids).stream()
+            .map(EventMapper::toFullDto)
+            .toList();
+  }
+
   /**
    * Gets specified Event created by User with given ID, with confirmedRequests and views data set.
    */
@@ -302,11 +309,11 @@ public class EventServiceImpl implements EventService {
 
     log.debug("Calling StatsClient with parameters: start={}, end={}, uris={}, unique={}.",
         start, end, Arrays.toString(uris), true);
-    final Map<String, Long> views = Arrays.stream(statsClient.getStats(start, end, uris, true))
-        .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits));
-
-    events.forEach(event ->
-        event.setViews(views.getOrDefault(buildEventUri(event.getId()), 0L)));
+//    final Map<String, Long> views = Arrays.stream(statsClient.getStats(start, end, uris, true))
+//        .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits));
+//
+//    events.forEach(event ->
+//        event.setViews(views.getOrDefault(buildEventUri(event.getId()), 0L)));
     log.debug("Views has set successfully.");
 
   }
